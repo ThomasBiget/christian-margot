@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from "../components/theme-provider";
 import Header from "../components/layout/header";
 import Footer from "../components/layout/footer";
-import { Toaster } from "../../components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
