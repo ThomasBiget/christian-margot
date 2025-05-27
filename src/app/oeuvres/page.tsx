@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getArtworksByCategory } from "../../lib/artwork";
-import { CategoryGrid } from "../../components/artworks/category-grid";
-import { PaintingCategoryTabs } from "../../components/artworks/painting-category-tabs";
+import { getArtworksByCategory } from "@/lib/artwork";
+import { CategoryGrid } from "@/components/artworks/category-grid";
+import { PaintingCategoryTabs } from "@/components/artworks/painting-category-tabs";
 
 export const metadata = {
   title: "Mes Œuvres | Portfolio Artistique",

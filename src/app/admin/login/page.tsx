@@ -1,21 +1,30 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { toast } from "sonner";
 
 const formSchema = z.object({
-  email: z.string().email('Veuillez entrer une adresse email valide'),
-  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
+  email: z.string().email("Veuillez entrer une adresse email valide"),
+  password: z
+    .string()
+    .min(6, "Le mot de passe doit contenir au moins 6 caractères"),
 });
 
 export default function LoginPage() {
@@ -28,31 +37,31 @@ export default function LoginPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    
+
     try {
-      const response = await signIn('credentials', {
+      const response = await signIn("credentials", {
         email: values.email,
         password: values.password,
         redirect: false,
       });
 
       if (response?.error) {
-        toast.error('Identifiants incorrects');
+        toast.error("Identifiants incorrects");
         return;
       }
 
-      toast.success('Connexion réussie');
-      router.push('/admin');
+      toast.success("Connexion réussie");
+      router.push("/admin");
       router.refresh();
     } catch (error) {
-      toast.error('Une erreur est survenue');
+      toast.error("Une erreur est survenue");
     } finally {
       setIsLoading(false);
     }
@@ -63,9 +72,11 @@ export default function LoginPage() {
       <div className="max-w-md mx-auto">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-playfair mb-2">Connexion Admin</h1>
-          <p className="text-muted-foreground">Connectez-vous pour gérer votre portfolio</p>
+          <p className="text-muted-foreground">
+            Connectez-vous pour gérer votre portfolio
+          </p>
         </div>
-        
+
         <div className="bg-white p-8 rounded-lg shadow-sm">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -76,10 +87,10 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="email" 
-                        placeholder="votre@email.com" 
-                        {...field} 
+                      <Input
+                        type="email"
+                        placeholder="votre@email.com"
+                        {...field}
                         disabled={isLoading}
                       />
                     </FormControl>
@@ -87,7 +98,7 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="password"
@@ -97,7 +108,7 @@ export default function LoginPage() {
                     <FormControl>
                       <div className="relative">
                         <Input
-                          type={showPassword ? 'text' : 'password'}
+                          type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
                           {...field}
                           disabled={isLoading}
@@ -119,13 +130,9 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-              >
-                {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Connexion en cours..." : "Se connecter"}
                 {!isLoading && <LogIn className="ml-2 h-4 w-4" />}
               </Button>
             </form>
