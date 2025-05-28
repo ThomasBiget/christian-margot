@@ -30,6 +30,7 @@ import { Edit, Trash2, Calendar, MapPin, Star } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface EventsTableProps {
   events: EventWithImages[];
@@ -41,17 +42,23 @@ export function EventsTable({ events }: EventsTableProps) {
 
   const handleDelete = async (id: string) => {
     try {
+      setDeletingId(id);
+
       const response = await fetch(`/api/events/${id}`, {
         method: "DELETE",
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Événement supprimé avec succès");
         router.refresh();
       } else {
-        console.error("Erreur lors de la suppression");
+        throw new Error(data.error || "Erreur lors de la suppression");
       }
     } catch (error) {
       console.error("Erreur:", error);
+      toast.error("Erreur lors de la suppression de l'événement");
     } finally {
       setDeletingId(null);
     }
@@ -147,6 +154,7 @@ export function EventsTable({ events }: EventsTableProps) {
                         variant="outline"
                         size="sm"
                         className="text-red-600 hover:text-red-700"
+                        disabled={deletingId === event.id}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -168,8 +176,11 @@ export function EventsTable({ events }: EventsTableProps) {
                         <AlertDialogAction
                           onClick={() => handleDelete(event.id)}
                           className="bg-red-600 hover:bg-red-700"
+                          disabled={deletingId === event.id}
                         >
-                          Supprimer
+                          {deletingId === event.id
+                            ? "Suppression..."
+                            : "Supprimer"}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>

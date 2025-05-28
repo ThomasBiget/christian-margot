@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface EditEventFormProps {
   event: EventWithImages;
@@ -72,11 +73,17 @@ export function EditEventForm({ event }: EditEventFormProps) {
         method: "DELETE",
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (data.success) {
         setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+        toast.success("Image supprimée avec succès");
+      } else {
+        throw new Error(data.error || "Erreur lors de la suppression");
       }
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
+      toast.error("Erreur lors de la suppression de l'image");
     }
   };
 
@@ -107,13 +114,17 @@ export function EditEventForm({ event }: EditEventFormProps) {
         }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Événement mis à jour avec succès");
         router.push("/admin/evenements");
       } else {
-        console.error("Erreur lors de la mise à jour");
+        throw new Error(data.error || "Erreur lors de la mise à jour");
       }
     } catch (error) {
       console.error("Erreur:", error);
+      toast.error("Erreur lors de la mise à jour de l'événement");
     } finally {
       setIsLoading(false);
     }

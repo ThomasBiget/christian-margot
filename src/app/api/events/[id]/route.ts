@@ -29,6 +29,7 @@ export async function PUT(
     // Revalider les pages qui affichent les événements
     revalidatePath("/"); // Page d'accueil
     revalidatePath("/evenements"); // Page des événements
+    revalidatePath(`/evenements/${params.id}`); // Page individuelle de l'événement
     revalidatePath("/admin"); // Page admin
     revalidatePath("/admin/evenements"); // Page admin événements
 
@@ -65,6 +66,7 @@ export async function DELETE(
     // Revalider les pages qui affichent les événements
     revalidatePath("/"); // Page d'accueil
     revalidatePath("/evenements"); // Page des événements
+    revalidatePath(`/evenements/${params.id}`); // Page individuelle de l'événement
     revalidatePath("/admin"); // Page admin
     revalidatePath("/admin/evenements"); // Page admin événements
 

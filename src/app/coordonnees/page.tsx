@@ -1,4 +1,4 @@
-import { MapPin, Mail, Phone } from "lucide-react";
+import { MapPin, Mail, Phone, Instagram } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 export const metadata = {
@@ -33,46 +33,26 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-medium">Email</h3>
                     <p className="text-muted-foreground mt-1">
-                      contact@lartiste.fr
+                      christian.margot@icloud.com
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <Phone className="w-5 h-5 text-muted-foreground mt-1" />
+                  <Instagram className="w-5 h-5 text-muted-foreground mt-1" />
                   <div>
-                    <h3 className="font-medium">Téléphone</h3>
-                    <p className="text-muted-foreground mt-1">
-                      +33 1 23 45 67 89
-                    </p>
+                    <h3 className="font-medium">Instagram</h3>
+                    <a
+                      href="https://www.instagram.com/artsc_margot/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground mt-1 hover:text-primary transition-colors"
+                    >
+                      @artsc_margot
+                    </a>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-playfair mb-6">
-                Horaires d&apos;atelier
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-medium">Lundi - Vendredi</h3>
-                  <p className="text-muted-foreground">10h00 - 18h00</p>
-                </div>
-                <div>
-                  <h3 className="font-medium">Samedi</h3>
-                  <p className="text-muted-foreground">
-                    Sur rendez-vous uniquement
-                  </p>
-                </div>
-                <div className="md:col-span-2">
-                  <h3 className="font-medium">Dimanche</h3>
-                  <p className="text-muted-foreground">Fermé</p>
-                </div>
-              </div>
-              <p className="mt-4 text-sm text-muted-foreground italic">
-                * Visites sur rendez-vous recommandées
-              </p>
             </div>
           </div>
         </div>
