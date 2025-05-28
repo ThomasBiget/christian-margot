@@ -13,6 +13,7 @@ import { Upload, X, Plus } from "lucide-react";
 import Image from "next/image";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { MultipleImageUpload } from "@/components/ui/multiple-image-upload";
+import { toast } from "sonner";
 
 interface CreateEventFormProps {
   onSuccess?: () => void;
@@ -52,6 +53,12 @@ export function CreateEventForm({ onSuccess }: CreateEventFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!mainImage) {
+      toast.error("Veuillez sélectionner une image principale");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -63,7 +70,7 @@ export function CreateEventForm({ onSuccess }: CreateEventFormProps) {
         description: formData.description,
         mainImageUrl: mainImage,
         date: dateTime.toISOString(),
-        location: formData.location || null,
+        location: formData.location || undefined,
         featured: formData.featured,
       };
 
@@ -74,18 +81,22 @@ export function CreateEventForm({ onSuccess }: CreateEventFormProps) {
         },
         body: JSON.stringify({
           ...eventData,
-          additionalImages: additionalImages,
+          additionalImages: additionalImages.filter((img) => img.trim() !== ""),
         }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Événement créé avec succès");
         onSuccess?.();
         router.push("/admin/evenements");
       } else {
-        console.error("Erreur lors de la création");
+        throw new Error(data.error || "Erreur lors de la création");
       }
     } catch (error) {
       console.error("Erreur:", error);
+      toast.error("Erreur lors de la création de l'événement");
     } finally {
       setIsLoading(false);
     }

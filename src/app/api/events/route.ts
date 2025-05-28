@@ -2,12 +2,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { updateEvent, deleteEvent, addEventImages } from "@/lib/event";
+import { getAllEvents, createEvent, addEventImages } from "@/lib/event";
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+const createEventSchema = z.object({
+  title: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
+  description: z
+    .string()
+    .min(10, "La description doit contenir au moins 10 caractères"),
+  mainImageUrl: z.string().url("Veuillez entrer une URL valide pour l'image"),
+  date: z.string().datetime("Date invalide"),
+  location: z.string().optional(),
+  featured: z.boolean().default(false),
+  additionalImages: z.array(z.string().url()).optional(),
+});
+
+export async function GET() {
+  try {
+    const events = await getAllEvents();
+
+    return NextResponse.json({
+      success: true,
+      events,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des événements:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Erreur lors de la récupération des événements",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -16,44 +47,61 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { newImages, ...eventData } = body;
 
-    // Mettre à jour l'événement
-    const event = await updateEvent(params.id, eventData);
+    // Validation des données
+    const validatedData = createEventSchema.parse(body);
 
-    // Ajouter les nouvelles images si présentes
-    if (newImages && newImages.length > 0) {
-      await addEventImages(params.id, newImages);
+    // Création de l'événement en base de données
+    const event = await createEvent({
+      title: validatedData.title,
+      description: validatedData.description,
+      mainImageUrl: validatedData.mainImageUrl,
+      date: new Date(validatedData.date),
+      location: validatedData.location,
+      featured: validatedData.featured || false,
+    });
+
+    // Ajouter les images supplémentaires si présentes
+    if (
+      validatedData.additionalImages &&
+      validatedData.additionalImages.length > 0
+    ) {
+      await addEventImages(event.id, validatedData.additionalImages);
     }
 
-    return NextResponse.json(event);
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour de l'événement:", error);
+    // Revalider les pages qui affichent les événements
+    revalidatePath("/"); // Page d'accueil
+    revalidatePath("/evenements"); // Page des événements
+    revalidatePath("/admin"); // Page admin
+    revalidatePath("/admin/evenements"); // Page admin événements
+
     return NextResponse.json(
-      { error: "Erreur lors de la mise à jour de l'événement" },
-      { status: 500 }
+      {
+        success: true,
+        event,
+        message: "Événement créé avec succès",
+      },
+      { status: 201 }
     );
-  }
-}
+  } catch (error) {
+    console.error("Erreur lors de la création de l'événement:", error);
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Données invalides",
+          details: error.errors,
+        },
+        { status: 400 }
+      );
     }
 
-    await deleteEvent(params.id);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Erreur lors de la suppression de l'événement:", error);
     return NextResponse.json(
-      { error: "Erreur lors de la suppression de l'événement" },
+      {
+        success: false,
+        error: "Erreur lors de la création de l'événement",
+      },
       { status: 500 }
     );
   }
