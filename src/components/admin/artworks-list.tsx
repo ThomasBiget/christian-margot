@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { prisma } from '@/lib/prisma';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Edit, Star, Trash2, ExternalLink, StarOff, Search } from 'lucide-react';
@@ -41,15 +42,36 @@ export default function ArtworksList() {
       try {
         // This would be an API call in a real application
         // For now, import mock data from lib/artwork
-        const { getFeaturedArtworks, getArtworksByCategory } = require('@/lib/artwork');
-        const paintings = await getArtworksByCategory('peinture');
-        const collages = await getArtworksByCategory('collage');
-        const pens = await getArtworksByCategory('stylo');
-        const sculptures = await getArtworksByCategory('modelage');
+       
+        const paintings = await prisma.artwork.findMany({
+          where: {
+            category: 'peinture',
+          },
+        })
+        const collages = await prisma.artwork.findMany({
+          where: {
+            category: 'collage',
+          },
+        })
+        const pens = await prisma.artwork.findMany({
+          where: {
+            category: 'stylo',
+          },
+        })
+        const sculptures = await prisma.artwork.findMany({
+          where: {
+            category: 'modelage',
+          },
+        })
         
         const allArtworks = [...paintings, ...collages, ...pens, ...sculptures];
         
-        setArtworks(allArtworks);
+        setArtworks(
+          allArtworks.map(a => ({
+            ...a,
+            subcategory: a.subcategory ?? undefined,
+          }))
+        );
       } catch (error) {
         toast.error('Erreur lors du chargement des œuvres');
       } finally {

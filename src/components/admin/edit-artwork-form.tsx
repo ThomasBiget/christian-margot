@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -67,7 +68,19 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
       console.log('Form values:', values);
       
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const updateUser = await prisma.artwork.update({
+        where: {
+          id: artwork.id,
+        },
+        data: {
+          title: values.title,
+          description: values.description,
+          imageUrl: values.imageUrl,
+          category: values.category as 'peinture' | 'collage' | 'stylo' | 'modelage',
+          subcategory: values.subcategory || '',
+          featured: values.featured || false,
+        },
+      })
       
       toast.success('Œuvre mise à jour avec succès');
       router.push('/admin');

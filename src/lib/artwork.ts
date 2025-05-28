@@ -1,3 +1,4 @@
+import { prisma } from "./prisma";
 import { Artwork } from "../types";
 
 // Mock data until Prisma is connected to a database
@@ -136,10 +137,15 @@ const artworks: Artwork[] = [
 
 // Function to get featured artworks for the homepage
 export async function getFeaturedArtworks(): Promise<Artwork[]> {
-  // This would be a database query in a real application
-  return artworks
-    .filter((artwork) => artwork.featured)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const featuredArtworks = await prisma.artwork.findMany({
+    where: {
+      featured: true,
+    },
+  });
+  return featuredArtworks.map(a => ({
+    ...a,
+    subcategory: a.subcategory ?? undefined,
+  }));
 }
 
 // Function to get artworks by category
@@ -147,18 +153,28 @@ export async function getArtworksByCategory(
   category: string
 ): Promise<Artwork[]> {
   // This would be a database query in a real application
-  return artworks
-    .filter(
-      (artwork) => artwork.category.toLowerCase() === category.toLowerCase()
-    )
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const artworks = await prisma.artwork.findMany({
+    where: {
+      category: category,
+    },
+  });
+  return artworks.map(a => ({
+    ...a,
+    subcategory: a.subcategory ?? undefined,
+  }));
 }
 
 // Function to get a single artwork by ID
 export async function getArtworkById(id: string): Promise<Artwork | null> {
-  // This would be a database query in a real application
-  const artwork = artworks.find((artwork) => artwork.id === id);
-  return artwork || null;
+  const artwork = await prisma.artwork.findUnique({
+    where: {
+      id: id,
+    },
+  });
+  return artwork ? {
+    ...artwork,
+    subcategory: artwork.subcategory ?? undefined,
+  } : null;
 }
 
 // Function to get related artworks
@@ -167,10 +183,14 @@ export async function getRelatedArtworks(
   excludeId: string
 ): Promise<Artwork[]> {
   // This would be a database query in a real application
-  return artworks
-    .filter(
-      (artwork) => artwork.category === category && artwork.id !== excludeId
-    )
-    .sort(() => Math.random() - 0.5) // Shuffle array for random selection
-    .slice(0, 4); // Return only 4 artworks
+  const relatedArtworks = await prisma.artwork.findMany({
+    where: {
+      category: category,
+      id: { not: excludeId },
+    },
+  });
+  return relatedArtworks.map(a => ({
+    ...a,
+    subcategory: a.subcategory ?? undefined,
+  }));
 }
