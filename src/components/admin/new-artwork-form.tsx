@@ -1,14 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -17,75 +16,88 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 interface NewArtworkFormProps {
   onSuccess: () => void;
 }
 
 const formSchema = z.object({
-  title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères'),
-  description: z.string().min(10, 'La description doit contenir au moins 10 caractères'),
-  imageUrl: z.string().url('Veuillez entrer une URL valide pour l\'image'),
-  category: z.enum(['peinture', 'collage', 'stylo', 'modelage']),
+  title: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
+  description: z
+    .string()
+    .min(10, "La description doit contenir au moins 10 caractères"),
+  imageUrl: z.string().url("Veuillez entrer une URL valide pour l'image"),
+  category: z.enum(["peinture", "collage", "stylo", "modelage"]),
   subcategory: z.string().optional(),
   featured: z.boolean().default(false),
 });
 
 export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      description: '',
-      imageUrl: '',
-      category: 'peinture',
-      subcategory: '',
+      title: "",
+      description: "",
+      imageUrl: "",
+      category: "peinture",
+      subcategory: "",
       featured: false,
     },
   });
-  
-  const watchCategory = form.watch('category');
-  
+
+  const watchCategory = form.watch("category");
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
-    
+
     try {
-      const artwork = await prisma.artwork.create({
-        data: {
-          title: values.title,
-          description: values.description,
-          imageUrl: values.imageUrl,
-          category: values.category as 'peinture' | 'collage' | 'stylo' | 'modelage',
-          subcategory: values.subcategory || '',
-          featured: values.featured || false,
+      const response = await fetch("/api/artworks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      })
-      
-      toast.success('Œuvre ajoutée avec succès');
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors de l'ajout de l'œuvre");
+      }
+
+      toast.success(data.message || "Œuvre ajoutée avec succès");
       form.reset();
       onSuccess();
     } catch (error) {
-      toast.error('Erreur lors de l\'ajout de l\'œuvre');
+      console.error("Erreur:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de l'ajout de l'œuvre"
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm">
-      <h2 className="text-2xl font-playfair mb-6">Ajouter une nouvelle œuvre</h2>
-      
+      <h2 className="text-2xl font-playfair mb-6">
+        Ajouter une nouvelle œuvre
+      </h2>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -101,7 +113,7 @@ export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="description"
@@ -109,34 +121,35 @@ export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    placeholder="Description de l'œuvre" 
-                    className="min-h-32" 
-                    {...field} 
+                  <Textarea
+                    placeholder="Description de l'œuvre"
+                    className="min-h-32"
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="imageUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>URL de l'image</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://exemple.com/image.jpg" {...field} />
+                  <ImageUpload
+                    value={field.value}
+                    onChange={field.onChange}
+                    label="Image de l'œuvre"
+                    required
+                  />
                 </FormControl>
-                <FormDescription>
-                  Entrez l'URL d'une image déjà hébergée en ligne
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={form.control}
@@ -144,8 +157,8 @@ export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Catégorie</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     defaultValue={field.value}
                     value={field.value}
                   >
@@ -165,16 +178,16 @@ export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
                 </FormItem>
               )}
             />
-            
-            {watchCategory === 'peinture' && (
+
+            {watchCategory === "peinture" && (
               <FormField
                 control={form.control}
                 name="subcategory"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sous-catégorie</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
+                    <Select
+                      onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -195,7 +208,7 @@ export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
               />
             )}
           </div>
-          
+
           <FormField
             control={form.control}
             name="featured"
@@ -210,15 +223,15 @@ export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
                 <div className="space-y-1 leading-none">
                   <FormLabel>Mettre en vedette</FormLabel>
                   <FormDescription>
-                    Cette œuvre sera affichée sur la page d'accueil
+                    Cette œuvre sera affichée sur la page d&apos;accueil
                   </FormDescription>
                 </div>
               </FormItem>
             )}
           />
-          
+
           <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? 'Ajout en cours...' : 'Ajouter l\'œuvre'}
+            {isSubmitting ? "Ajout en cours..." : "Ajouter l'œuvre"}
           </Button>
         </form>
       </Form>

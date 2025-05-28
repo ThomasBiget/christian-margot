@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { Artwork } from '@/types';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Artwork } from "../../types";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface FeaturedWorksProps {
   artworks: Artwork[];
@@ -24,7 +24,10 @@ export default function FeaturedWorks({ artworks }: FeaturedWorksProps) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="aspect-[3/4] bg-muted animate-pulse rounded-lg"></div>
+          <div
+            key={i}
+            className="aspect-[3/4] bg-muted animate-pulse rounded-lg"
+          ></div>
         ))}
       </div>
     );
@@ -35,37 +38,41 @@ export default function FeaturedWorks({ artworks }: FeaturedWorksProps) {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2
-      }
-    }
+        staggerChildren: 0.2,
+      },
+    },
   };
 
   const item = {
     hidden: { y: 20, opacity: 0 },
-    show: { 
-      y: 0, 
+    show: {
+      y: 0,
       opacity: 1,
-      transition: { duration: 0.5, ease: "easeOut" }
-    }
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
       variants={container}
       initial="hidden"
       animate="show"
     >
       {artworks.map((artwork, index) => (
-        <motion.div key={artwork.id} variants={item} className={cn(
-          "group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow",
-          index === 0 && "md:col-span-2 lg:col-span-2"
-        )}>
+        <motion.div
+          key={artwork.id}
+          variants={item}
+          className={cn(
+            "group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow",
+            index === 0 && "md:col-span-2 lg:col-span-2"
+          )}
+        >
           <Link href={`/oeuvres/${artwork.id}`} className="block">
             <div className="relative aspect-[3/4] overflow-hidden">
-              <Image 
-                src={artwork.imageUrl} 
-                alt={artwork.title} 
+              <Image
+                src={artwork.imageUrl}
+                alt={artwork.title}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
@@ -82,8 +89,11 @@ export default function FeaturedWorks({ artworks }: FeaturedWorksProps) {
                 )}
               </div>
               <div className="mt-4 flex items-center text-sm font-medium text-accent-foreground">
-                Voir l'œuvre
-                <ArrowRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
+                Voir l&apos;œuvre
+                <ArrowRight
+                  size={16}
+                  className="ml-1 transition-transform group-hover:translate-x-1"
+                />
               </div>
             </div>
           </Link>

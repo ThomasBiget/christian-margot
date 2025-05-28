@@ -18,9 +18,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Portfolio Artistique",
+  title: "Christian Margot - Artiste",
   description:
-    "Portfolio d'artiste peintre présentant peintures, collages, œuvres au stylo et modelages",
+    "Ce site rassemble mes oeuvres, vous retrouverez des peintures, collages, œuvres au stylo et modelages",
 };
 
 export default function RootLayout({

@@ -6,7 +6,7 @@ export interface Artwork {
   category: string;
   subcategory?: string;
   featured?: boolean;
-  createdAt: Date;
+  createdAt: Date | string;
 }
 
 export interface User {

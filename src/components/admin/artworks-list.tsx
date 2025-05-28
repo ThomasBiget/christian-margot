@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { prisma } from '@/lib/prisma';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Edit, Star, Trash2, ExternalLink, StarOff, Search } from 'lucide-react';
-import { Artwork } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Edit,
+  Star,
+  Trash2,
+  ExternalLink,
+  StarOff,
+  Search,
+} from "lucide-react";
+import { Artwork } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -15,7 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,89 +32,114 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { formatDate } from '@/lib/utils';
-import { toast } from 'sonner';
+} from "@/components/ui/alert-dialog";
+import { formatDate } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function ArtworksList() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  
+
   useEffect(() => {
-    // Simulate fetching artworks from API
     const fetchArtworks = async () => {
       try {
-        // This would be an API call in a real application
-        // For now, import mock data from lib/artwork
-       
-        const paintings = await prisma.artwork.findMany({
-          where: {
-            category: 'peinture',
-          },
-        })
-        const collages = await prisma.artwork.findMany({
-          where: {
-            category: 'collage',
-          },
-        })
-        const pens = await prisma.artwork.findMany({
-          where: {
-            category: 'stylo',
-          },
-        })
-        const sculptures = await prisma.artwork.findMany({
-          where: {
-            category: 'modelage',
-          },
-        })
-        
-        const allArtworks = [...paintings, ...collages, ...pens, ...sculptures];
-        
-        setArtworks(
-          allArtworks.map(a => ({
-            ...a,
-            subcategory: a.subcategory ?? undefined,
-          }))
-        );
+        const response = await fetch("/api/artworks");
+        const data = await response.json();
+
+        if (data.success) {
+          setArtworks(
+            data.artworks.map((a: any) => ({
+              ...a,
+              subcategory: a.subcategory ?? undefined,
+            }))
+          );
+        } else {
+          throw new Error(data.error || "Erreur lors du chargement");
+        }
       } catch (error) {
-        toast.error('Erreur lors du chargement des œuvres');
+        console.error("Erreur:", error);
+        toast.error("Erreur lors du chargement des œuvres");
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchArtworks();
   }, []);
-  
-  const filteredArtworks = artworks.filter(artwork => 
-    artwork.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    artwork.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (artwork.subcategory && artwork.subcategory.toLowerCase().includes(searchQuery.toLowerCase()))
+
+  const filteredArtworks = artworks.filter(
+    (artwork) =>
+      artwork.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      artwork.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (artwork.subcategory &&
+        artwork.subcategory.toLowerCase().includes(searchQuery.toLowerCase()))
   );
-  
-  const handleToggleFeatured = (artwork: Artwork) => {
-    // This would be an API call in a real application
-    const updatedArtworks = artworks.map(item => 
-      item.id === artwork.id 
-        ? { ...item, featured: !item.featured }
-        : item
-    );
-    setArtworks(updatedArtworks);
-    
-    toast.success(`Œuvre ${artwork.featured ? 'retirée des' : 'ajoutée aux'} œuvres en vedette`);
+
+  console.log(filteredArtworks);
+
+  const handleToggleFeatured = async (artwork: Artwork) => {
+    try {
+      const response = await fetch("/api/artworks", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: artwork.id,
+          featured: !artwork.featured,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const updatedArtworks = artworks.map((item) =>
+          item.id === artwork.id ? { ...item, featured: !item.featured } : item
+        );
+        setArtworks(updatedArtworks);
+
+        toast.success(
+          `Œuvre ${
+            artwork.featured ? "retirée des" : "ajoutée aux"
+          } œuvres en vedette`
+        );
+      } else {
+        throw new Error(data.error || "Erreur lors de la mise à jour");
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      toast.error("Erreur lors de la mise à jour de l'œuvre");
+    }
   };
-  
-  const handleDeleteArtwork = (id: string) => {
-    // This would be an API call in a real application
-    const updatedArtworks = artworks.filter(artwork => artwork.id !== id);
-    setArtworks(updatedArtworks);
-    setDeletingId(null);
-    
-    toast.success('Œuvre supprimée avec succès');
+
+  const handleDeleteArtwork = async (id: string) => {
+    try {
+      setDeletingId(id);
+
+      const response = await fetch(`/api/artworks?id=${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const updatedArtworks = artworks.filter((artwork) => artwork.id !== id);
+        setArtworks(updatedArtworks);
+        toast.success("Œuvre supprimée avec succès");
+      } else {
+        console.log(data.error);
+        throw new Error(data.error || "Erreur lors de la suppression");
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      toast.error("Erreur lors de la suppression de l'œuvre");
+    } finally {
+      setDeletingId(null);
+    }
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -116,7 +147,7 @@ export default function ArtworksList() {
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center relative">
@@ -128,7 +159,7 @@ export default function ArtworksList() {
           className="pl-10"
         />
       </div>
-      
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -137,7 +168,7 @@ export default function ArtworksList() {
               <TableHead>Titre</TableHead>
               <TableHead>Catégorie</TableHead>
               <TableHead>Sous-catégorie</TableHead>
-              <TableHead>Date d'ajout</TableHead>
+              <TableHead>Date d&apos;ajout</TableHead>
               <TableHead className="w-[100px]">En vedette</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -163,8 +194,12 @@ export default function ArtworksList() {
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">{artwork.title}</TableCell>
-                  <TableCell className="capitalize">{artwork.category}</TableCell>
-                  <TableCell className="capitalize">{artwork.subcategory || '-'}</TableCell>
+                  <TableCell className="capitalize">
+                    {artwork.category}
+                  </TableCell>
+                  <TableCell className="capitalize">
+                    {artwork.subcategory || "-"}
+                  </TableCell>
                   <TableCell>{formatDate(artwork.createdAt)}</TableCell>
                   <TableCell>
                     <Button
@@ -193,15 +228,22 @@ export default function ArtworksList() {
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={deletingId === artwork.id}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Supprimer cette œuvre ?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              Supprimer cette œuvre ?
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Cette action ne peut pas être annulée. L'œuvre sera définitivement supprimée.
+                              Cette action ne peut pas être annulée.
+                              L&apos;œuvre sera définitivement supprimée.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

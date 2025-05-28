@@ -1,16 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Artwork } from '@/types';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Artwork } from "@/types";
 import {
   Form,
   FormControl,
@@ -19,25 +18,28 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 interface EditArtworkFormProps {
   artwork: Artwork;
 }
 
 const formSchema = z.object({
-  title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères'),
-  description: z.string().min(10, 'La description doit contenir au moins 10 caractères'),
-  imageUrl: z.string().url('Veuillez entrer une URL valide pour l\'image'),
-  category: z.enum(['peinture', 'collage', 'stylo', 'modelage']),
+  title: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
+  description: z
+    .string()
+    .min(10, "La description doit contenir au moins 10 caractères"),
+  imageUrl: z.string().url("Veuillez entrer une URL valide pour l&apos;image"),
+  category: z.enum(["peinture", "collage", "stylo", "modelage"]),
   subcategory: z.string().optional(),
   featured: z.boolean().default(false),
 });
@@ -45,53 +47,62 @@ const formSchema = z.object({
 export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: artwork.title,
       description: artwork.description,
       imageUrl: artwork.imageUrl,
-      category: artwork.category as 'peinture' | 'collage' | 'stylo' | 'modelage',
-      subcategory: artwork.subcategory || '',
+      category: artwork.category as
+        | "peinture"
+        | "collage"
+        | "stylo"
+        | "modelage",
+      subcategory: artwork.subcategory || "",
       featured: artwork.featured || false,
     },
   });
-  
-  const watchCategory = form.watch('category');
-  
+
+  const watchCategory = form.watch("category");
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
-    
+
     try {
-      // This would be an API call to update the artwork in a real application
-      console.log('Form values:', values);
-      
-      // Simulate API call
-      const updateUser = await prisma.artwork.update({
-        where: {
-          id: artwork.id,
+      const response = await fetch("/api/artworks", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
         },
-        data: {
+        body: JSON.stringify({
+          id: artwork.id,
           title: values.title,
           description: values.description,
           imageUrl: values.imageUrl,
-          category: values.category as 'peinture' | 'collage' | 'stylo' | 'modelage',
-          subcategory: values.subcategory || '',
-          featured: values.featured || false,
-        },
-      })
-      
-      toast.success('Œuvre mise à jour avec succès');
-      router.push('/admin');
+          category: values.category,
+          subcategory: values.subcategory || "",
+          featured: values.featured,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Erreur lors de la mise à jour");
+      }
+
+      toast.success("Œuvre mise à jour avec succès");
+      router.push("/admin");
       router.refresh();
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour de l\'œuvre');
+      console.error("Erreur:", error);
+      toast.error("Erreur lors de la mise à jour de l&apos;œuvre");
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm">
       <Form {...form}>
@@ -109,7 +120,7 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="description"
@@ -117,34 +128,35 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    placeholder="Description de l'œuvre" 
-                    className="min-h-32" 
-                    {...field} 
+                  <Textarea
+                    placeholder="Description de l'œuvre"
+                    className="min-h-32"
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="imageUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>URL de l'image</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://exemple.com/image.jpg" {...field} />
+                  <ImageUpload
+                    value={field.value}
+                    onChange={field.onChange}
+                    label="Image de l'œuvre"
+                    required
+                  />
                 </FormControl>
-                <FormDescription>
-                  Entrez l'URL d'une image déjà hébergée en ligne
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={form.control}
@@ -152,8 +164,8 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Catégorie</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
@@ -172,16 +184,16 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
                 </FormItem>
               )}
             />
-            
-            {watchCategory === 'peinture' && (
+
+            {watchCategory === "peinture" && (
               <FormField
                 control={form.control}
                 name="subcategory"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sous-catégorie</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
+                    <Select
+                      onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -202,7 +214,7 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
               />
             )}
           </div>
-          
+
           <FormField
             control={form.control}
             name="featured"
@@ -217,23 +229,23 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
                 <div className="space-y-1 leading-none">
                   <FormLabel>Mettre en vedette</FormLabel>
                   <FormDescription>
-                    Cette œuvre sera affichée sur la page d'accueil
+                    Cette œuvre sera affichée sur la page d&apos;accueil
                   </FormDescription>
                 </div>
               </FormItem>
             )}
           />
-          
+
           <div className="flex justify-end space-x-4 mt-8">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => router.push('/admin')}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/admin")}
             >
               Annuler
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Mise à jour en cours...' : 'Mettre à jour'}
+              {isSubmitting ? "Mise à jour en cours..." : "Mettre à jour"}
             </Button>
           </div>
         </form>

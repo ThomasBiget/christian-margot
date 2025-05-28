@@ -154,12 +154,13 @@ export function EventsTable({ events }: EventsTableProps) {
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>
-                          Supprimer l'événement
+                          Supprimer l&apos;événement
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          Êtes-vous sûr de vouloir supprimer l'événement "
-                          {event.title}" ? Cette action est irréversible et
-                          supprimera également toutes les photos associées.
+                          Êtes-vous sûr de vouloir supprimer l&apos;événement
+                          &ldquot;
+                          {event.title}&ldquot; ? Cette action est irréversible
+                          et supprimera également toutes les photos associées.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
