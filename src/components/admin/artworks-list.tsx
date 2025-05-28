@@ -118,7 +118,7 @@ export default function ArtworksList() {
     try {
       setDeletingId(id);
 
-      const response = await fetch(`/api/artworks?id=${id}`, {
+      const response = await fetch(`/api/artworks/${id}`, {
         method: "DELETE",
       });
 

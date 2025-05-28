@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 const createArtworkSchema = z.object({
   title: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
@@ -66,6 +67,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Revalider les pages qui affichent les œuvres
+    revalidatePath("/"); // Page d'accueil
+    revalidatePath("/oeuvres"); // Page des œuvres
+    revalidatePath("/admin"); // Page admin
+
     return NextResponse.json(
       {
         success: true,
@@ -120,6 +126,11 @@ export async function PUT(request: NextRequest) {
         }),
       },
     });
+
+    // Revalider les pages qui affichent les œuvres
+    revalidatePath("/"); // Page d'accueil
+    revalidatePath("/oeuvres"); // Page des œuvres
+    revalidatePath("/admin"); // Page admin
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@ import Image from "next/image";
 import FeaturedWorks from "../components/home/featured-works";
 import { getFeaturedArtworks } from "../lib/artwork";
 import HeaderImage from "../media/cm-banner.png";
+
 export default async function Home() {
   const featuredArtworks = await getFeaturedArtworks();
 
