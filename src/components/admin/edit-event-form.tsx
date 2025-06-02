@@ -27,8 +27,10 @@ export function EditEventForm({ event }: EditEventFormProps) {
   const [formData, setFormData] = useState({
     title: event.title,
     description: event.description,
-    date: format(new Date(event.date), "yyyy-MM-dd"),
-    time: format(new Date(event.date), "HH:mm"),
+    startDate: format(new Date(event.startDate), "yyyy-MM-dd"),
+    startTime: format(new Date(event.startDate), "HH:mm"),
+    endDate: format(new Date(event.endDate), "yyyy-MM-dd"),
+    endTime: format(new Date(event.endDate), "HH:mm"),
     location: event.location || "",
     featured: event.featured,
   });
@@ -67,6 +69,20 @@ export function EditEventForm({ event }: EditEventFormProps) {
     setNewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const validateDates = () => {
+    const startDateTime = new Date(
+      `${formData.startDate}T${formData.startTime}`
+    );
+    const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
+
+    if (startDateTime >= endDateTime) {
+      toast.error("La date de fin doit être postérieure à la date de début");
+      return false;
+    }
+
+    return true;
+  };
+
   const removeExistingImage = async (imageId: string) => {
     try {
       const response = await fetch(`/api/events/images/${imageId}`, {
@@ -89,16 +105,25 @@ export function EditEventForm({ event }: EditEventFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateDates()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const dateTime = new Date(`${formData.date}T${formData.time}`);
+      const startDateTime = new Date(
+        `${formData.startDate}T${formData.startTime}`
+      );
+      const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
 
       const eventData = {
         title: formData.title,
         description: formData.description,
         mainImageUrl: mainImage,
-        date: dateTime.toISOString(),
+        startDate: startDateTime.toISOString(),
+        endDate: endDateTime.toISOString(),
         location: formData.location || null,
         featured: formData.featured,
       };
@@ -164,28 +189,59 @@ export function EditEventForm({ event }: EditEventFormProps) {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="date">Date *</Label>
-              <Input
-                id="date"
-                name="date"
-                type="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                required
-              />
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Date et heure de début *</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="startDate">Date de début *</Label>
+                <Input
+                  id="startDate"
+                  name="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="startTime">Heure de début *</Label>
+                <Input
+                  id="startTime"
+                  name="startTime"
+                  type="time"
+                  value={formData.startTime}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="time">Heure *</Label>
-              <Input
-                id="time"
-                name="time"
-                type="time"
-                value={formData.time}
-                onChange={handleInputChange}
-                required
-              />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Date et heure de fin *</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="endDate">Date de fin *</Label>
+                <Input
+                  id="endDate"
+                  name="endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="endTime">Heure de fin *</Label>
+                <Input
+                  id="endTime"
+                  name="endTime"
+                  type="time"
+                  value={formData.endTime}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
             </div>
           </div>
 
@@ -215,129 +271,108 @@ export function EditEventForm({ event }: EditEventFormProps) {
         <CardHeader>
           <CardTitle>Image principale *</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="mainImage">URL de l&apos;image principale</Label>
+            <Label htmlFor="mainImage">URL de l&apos;image principale *</Label>
             <Input
               id="mainImage"
               value={mainImage}
               onChange={(e) => setMainImage(e.target.value)}
+              placeholder="https://exemple.com/image.jpg"
               required
-              placeholder="https://example.com/image.jpg"
             />
-            {mainImage && (
-              <div className="mt-4 relative w-full h-48 rounded-lg overflow-hidden">
-                <Image
-                  src={mainImage}
-                  alt="Aperçu"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            )}
           </div>
+          {mainImage && (
+            <div className="relative w-full h-48 rounded-lg overflow-hidden">
+              <Image
+                src={mainImage}
+                alt="Aperçu de l'image principale"
+                fill
+                className="object-cover"
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Images supplémentaires ({totalImages}/10)
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addNewImage}
-              disabled={totalImages >= 10}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Ajouter
-            </Button>
-          </CardTitle>
+          <CardTitle>Images supplémentaires</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Images existantes */}
-            {existingImages.length > 0 && (
-              <div>
-                <h4 className="font-medium mb-4">Images actuelles</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {existingImages.map((image) => (
-                    <div key={image.id} className="relative">
-                      <div className="relative aspect-video rounded-lg overflow-hidden">
-                        <Image
-                          src={image.imageUrl}
-                          alt="Image événement"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
+        <CardContent className="space-y-6">
+          {/* Images existantes */}
+          {existingImages.length > 0 && (
+            <div>
+              <h4 className="font-medium mb-3">Images actuelles</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {existingImages.map((image) => (
+                  <div key={image.id} className="relative group">
+                    <div className="relative aspect-square rounded-lg overflow-hidden">
+                      <Image
+                        src={image.imageUrl}
+                        alt="Image de l'événement"
+                        fill
+                        className="object-cover"
+                      />
                       <Button
                         type="button"
                         variant="destructive"
                         size="sm"
-                        className="absolute top-2 right-2"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => removeExistingImage(image.id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Nouvelles images */}
+          {/* Nouvelles images */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium">Ajouter de nouvelles images</h4>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addNewImage}
+                disabled={totalImages >= 10}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Ajouter une image
+              </Button>
+            </div>
+
             {newImages.length > 0 && (
-              <div>
-                <h4 className="font-medium mb-4">Nouvelles images</h4>
-                <div className="space-y-4">
-                  {newImages.map((imageUrl, index) => (
-                    <div key={index} className="flex items-start gap-4">
-                      <div className="flex-1">
-                        <Label htmlFor={`new-image-${index}`}>
-                          Nouvelle image {index + 1}
-                        </Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id={`new-image-${index}`}
-                            value={imageUrl}
-                            onChange={(e) =>
-                              updateNewImage(index, e.target.value)
-                            }
-                            placeholder="https://example.com/image.jpg"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeNewImage(index)}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        {imageUrl && (
-                          <div className="mt-2 relative w-32 h-24 rounded overflow-hidden">
-                            <Image
-                              src={imageUrl}
-                              alt={`Aperçu ${index + 1}`}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                      </div>
+              <div className="space-y-3">
+                {newImages.map((image, index) => (
+                  <div key={index} className="flex gap-3">
+                    <div className="flex-1">
+                      <Input
+                        value={image}
+                        onChange={(e) => updateNewImage(index, e.target.value)}
+                        placeholder="https://exemple.com/image.jpg"
+                      />
                     </div>
-                  ))}
-                </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeNewImage(index)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
 
-            {totalImages === 0 && (
-              <p className="text-muted-foreground text-sm">
-                Aucune image supplémentaire.
-              </p>
-            )}
+            <p className="text-sm text-muted-foreground">
+              {totalImages}/10 images au total
+            </p>
           </div>
         </CardContent>
       </Card>

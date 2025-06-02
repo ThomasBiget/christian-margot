@@ -16,7 +16,7 @@ export async function getAllEvents(): Promise<EventWithImages[]> {
       },
     },
     orderBy: {
-      date: "desc",
+      startDate: "desc",
     },
   });
 }
@@ -25,7 +25,7 @@ export async function getUpcomingEvents(): Promise<EventWithImages[]> {
   const now = new Date();
   return await prisma.event.findMany({
     where: {
-      date: {
+      endDate: {
         gte: now,
       },
     },
@@ -37,7 +37,7 @@ export async function getUpcomingEvents(): Promise<EventWithImages[]> {
       },
     },
     orderBy: {
-      date: "asc",
+      startDate: "asc",
     },
   });
 }
@@ -46,7 +46,7 @@ export async function getPastEvents(): Promise<EventWithImages[]> {
   const now = new Date();
   return await prisma.event.findMany({
     where: {
-      date: {
+      endDate: {
         lt: now,
       },
     },
@@ -58,7 +58,7 @@ export async function getPastEvents(): Promise<EventWithImages[]> {
       },
     },
     orderBy: {
-      date: "desc",
+      startDate: "desc",
     },
   });
 }
@@ -93,7 +93,7 @@ export async function getFeaturedEvents(
       },
     },
     orderBy: {
-      date: "desc",
+      startDate: "desc",
     },
     take: limit,
   });
@@ -103,7 +103,8 @@ export async function createEvent(data: {
   title: string;
   description: string;
   mainImageUrl: string;
-  date: Date;
+  startDate: Date;
+  endDate: Date;
   location?: string;
   featured?: boolean;
 }): Promise<Event> {
@@ -118,7 +119,8 @@ export async function updateEvent(
     title?: string;
     description?: string;
     mainImageUrl?: string;
-    date?: Date;
+    startDate?: Date;
+    endDate?: Date;
     location?: string;
     featured?: boolean;
   }
@@ -154,4 +156,22 @@ export async function deleteEventImage(imageId: string): Promise<void> {
   await prisma.eventImage.delete({
     where: { id: imageId },
   });
+}
+
+// Fonction utilitaire pour vérifier si un événement est en cours
+export function isEventOngoing(event: Event): boolean {
+  const now = new Date();
+  return now >= event.startDate && now <= event.endDate;
+}
+
+// Fonction utilitaire pour vérifier si un événement est passé
+export function isEventPast(event: Event): boolean {
+  const now = new Date();
+  return now > event.endDate;
+}
+
+// Fonction utilitaire pour vérifier si un événement est à venir
+export function isEventUpcoming(event: Event): boolean {
+  const now = new Date();
+  return now < event.startDate;
 }

@@ -4,8 +4,7 @@ import Link from "next/link";
 import { EventWithImages } from "@/lib/event";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, MapPin } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { formatEventPeriod } from "@/lib/utils";
 
 interface EventsGridProps {
   events: EventWithImages[];
@@ -33,9 +32,7 @@ export function EventsGrid({ events }: EventsGridProps) {
             <CardContent className="p-6">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                 <Calendar className="w-4 h-4" />
-                <span>
-                  {format(new Date(event.date), "d MMMM yyyy", { locale: fr })}
-                </span>
+                <span>{formatEventPeriod(event.startDate, event.endDate)}</span>
               </div>
 
               {event.location && (

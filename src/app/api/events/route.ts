@@ -6,17 +6,31 @@ import { getAllEvents, createEvent, addEventImages } from "@/lib/event";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
-const createEventSchema = z.object({
-  title: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
-  description: z
-    .string()
-    .min(10, "La description doit contenir au moins 10 caractères"),
-  mainImageUrl: z.string().url("Veuillez entrer une URL valide pour l'image"),
-  date: z.string().datetime("Date invalide"),
-  location: z.string().optional(),
-  featured: z.boolean().default(false),
-  additionalImages: z.array(z.string().url()).optional(),
-});
+const createEventSchema = z
+  .object({
+    title: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
+    description: z
+      .string()
+      .min(10, "La description doit contenir au moins 10 caractères"),
+    mainImageUrl: z.string().url("Veuillez entrer une URL valide pour l'image"),
+    startDate: z.string().datetime("Date de début invalide"),
+    endDate: z.string().datetime("Date de fin invalide"),
+    location: z.string().optional(),
+    featured: z.boolean().default(false),
+    additionalImages: z.array(z.string().url()).optional(),
+  })
+  .refine(
+    (data) => {
+      const startDate = new Date(data.startDate);
+      const endDate = new Date(data.endDate);
+      return startDate <= endDate;
+    },
+    {
+      message:
+        "La date de fin doit être postérieure ou égale à la date de début",
+      path: ["endDate"],
+    }
+  );
 
 export async function GET() {
   try {
@@ -56,7 +70,8 @@ export async function POST(request: NextRequest) {
       title: validatedData.title,
       description: validatedData.description,
       mainImageUrl: validatedData.mainImageUrl,
-      date: new Date(validatedData.date),
+      startDate: new Date(validatedData.startDate),
+      endDate: new Date(validatedData.endDate),
       location: validatedData.location,
       featured: validatedData.featured || false,
     });

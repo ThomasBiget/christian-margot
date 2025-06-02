@@ -4,7 +4,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { EventWithImages } from "@/lib/event";
+import { EventWithImages, isEventPast } from "@/lib/event";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -27,8 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Edit, Trash2, Calendar, MapPin, Star } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { formatEventPeriodShort } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -64,10 +63,6 @@ export function EventsTable({ events }: EventsTableProps) {
     }
   };
 
-  const isEventPast = (date: Date) => {
-    return new Date(date) < new Date();
-  };
-
   return (
     <div className="border rounded-lg">
       <Table>
@@ -75,7 +70,7 @@ export function EventsTable({ events }: EventsTableProps) {
           <TableRow>
             <TableHead className="w-20">Image</TableHead>
             <TableHead>Titre</TableHead>
-            <TableHead>Date</TableHead>
+            <TableHead>Période</TableHead>
             <TableHead>Lieu</TableHead>
             <TableHead>Statut</TableHead>
             <TableHead>Photos</TableHead>
@@ -112,7 +107,7 @@ export function EventsTable({ events }: EventsTableProps) {
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">
-                    {format(new Date(event.date), "d MMM yyyy", { locale: fr })}
+                    {formatEventPeriodShort(event.startDate, event.endDate)}
                   </span>
                 </div>
               </TableCell>
@@ -129,10 +124,8 @@ export function EventsTable({ events }: EventsTableProps) {
                 )}
               </TableCell>
               <TableCell>
-                <Badge
-                  variant={isEventPast(event.date) ? "secondary" : "default"}
-                >
-                  {isEventPast(event.date) ? "Passé" : "À venir"}
+                <Badge variant={isEventPast(event) ? "secondary" : "default"}>
+                  {isEventPast(event) ? "Passé" : "À venir"}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -141,19 +134,18 @@ export function EventsTable({ events }: EventsTableProps) {
                   {event.images.length > 1 ? "s" : ""}
                 </span>
               </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Link href={`/admin/evenements/${event.id}`}>
-                    <Button variant="outline" size="sm">
+              <TableCell>
+                <div className="flex items-center gap-2 justify-end">
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/evenements/${event.id}`}>
                       <Edit className="w-4 h-4" />
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-red-600 hover:text-red-700"
                         disabled={deletingId === event.id}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -166,8 +158,8 @@ export function EventsTable({ events }: EventsTableProps) {
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                           Êtes-vous sûr de vouloir supprimer l&apos;événement
-                          &ldquot;
-                          {event.title}&ldquot; ? Cette action est irréversible
+                          &ldquo;
+                          {event.title}&rdquo; ? Cette action est irréversible
                           et supprimera également toutes les photos associées.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

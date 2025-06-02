@@ -5,8 +5,7 @@ import { Metadata } from "next";
 import { getEventById, getFeaturedEvents } from "@/lib/event";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, MapPin } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { formatEventDateTime } from "@/lib/utils";
 import { EventGallery } from "@/components/events/event-gallery";
 import { RelatedEvents } from "@/components/events/related-events";
 
@@ -22,13 +21,11 @@ export async function generateMetadata({
   const event = await getEventById(params.id);
 
   if (!event) {
-    return {
-      title: "Événement non trouvé | Portfolio Artistique",
-    };
+    return { title: "Événement non trouvé" };
   }
 
   return {
-    title: `${event.title} | Portfolio Artistique`,
+    title: `${event.title} | Événements`,
     description: event.description,
   };
 }
@@ -63,12 +60,10 @@ export default async function EventPage({ params }: EventPageParams) {
             </h1>
 
             <div className="space-y-4 mb-6">
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <Calendar className="w-5 h-5" />
-                <span className="text-lg">
-                  {format(new Date(event.date), "EEEE d MMMM yyyy 'à' HH:mm", {
-                    locale: fr,
-                  })}
+              <div className="flex items-start gap-3 text-muted-foreground">
+                <Calendar className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <span className="text-lg leading-relaxed">
+                  {formatEventDateTime(event.startDate, event.endDate)}
                 </span>
               </div>
 

@@ -33,7 +33,8 @@ model Event {
   title        String
   description  String
   mainImageUrl String
-  date         DateTime
+  startDate    DateTime
+  endDate      DateTime
   location     String?
   featured     Boolean     @default(false)
   createdAt    DateTime    @default(now())

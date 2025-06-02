@@ -26,8 +26,10 @@ export function CreateEventForm({ onSuccess }: CreateEventFormProps) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    date: "",
-    time: "",
+    startDate: "",
+    startTime: "",
+    endDate: "",
+    endTime: "",
     location: "",
     featured: false,
   });
@@ -51,6 +53,20 @@ export function CreateEventForm({ onSuccess }: CreateEventFormProps) {
     }));
   };
 
+  const validateDates = () => {
+    const startDateTime = new Date(
+      `${formData.startDate}T${formData.startTime}`
+    );
+    const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
+
+    if (startDateTime >= endDateTime) {
+      toast.error("La date de fin doit être postérieure à la date de début");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -59,17 +75,25 @@ export function CreateEventForm({ onSuccess }: CreateEventFormProps) {
       return;
     }
 
+    if (!validateDates()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Combiner date et heure
-      const dateTime = new Date(`${formData.date}T${formData.time}`);
+      // Combiner dates et heures
+      const startDateTime = new Date(
+        `${formData.startDate}T${formData.startTime}`
+      );
+      const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
 
       const eventData = {
         title: formData.title,
         description: formData.description,
         mainImageUrl: mainImage,
-        date: dateTime.toISOString(),
+        startDate: startDateTime.toISOString(),
+        endDate: endDateTime.toISOString(),
         location: formData.location || undefined,
         featured: formData.featured,
       };
@@ -134,28 +158,59 @@ export function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="date">Date *</Label>
-              <Input
-                id="date"
-                name="date"
-                type="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                required
-              />
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Date et heure de début *</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="startDate">Date de début *</Label>
+                <Input
+                  id="startDate"
+                  name="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="startTime">Heure de début *</Label>
+                <Input
+                  id="startTime"
+                  name="startTime"
+                  type="time"
+                  value={formData.startTime}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="time">Heure *</Label>
-              <Input
-                id="time"
-                name="time"
-                type="time"
-                value={formData.time}
-                onChange={handleInputChange}
-                required
-              />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Date et heure de fin *</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="endDate">Date de fin *</Label>
+                <Input
+                  id="endDate"
+                  name="endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="endTime">Heure de fin *</Label>
+                <Input
+                  id="endTime"
+                  name="endTime"
+                  type="time"
+                  value={formData.endTime}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
             </div>
           </div>
 

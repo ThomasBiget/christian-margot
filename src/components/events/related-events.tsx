@@ -4,8 +4,7 @@ import Link from "next/link";
 import { EventWithImages } from "@/lib/event";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, MapPin } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { formatEventPeriodShort } from "@/lib/utils";
 
 interface RelatedEventsProps {
   events: EventWithImages[];
@@ -29,7 +28,7 @@ export function RelatedEvents({ events }: RelatedEventsProps) {
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 <Calendar className="w-3 h-3" />
                 <span>
-                  {format(new Date(event.date), "d MMM yyyy", { locale: fr })}
+                  {formatEventPeriodShort(event.startDate, event.endDate)}
                 </span>
               </div>
 
