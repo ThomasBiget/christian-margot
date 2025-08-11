@@ -142,7 +142,7 @@ export async function getFeaturedArtworks(): Promise<Artwork[]> {
       where: {
         featured: true,
       },
-      orderBy: [{ displayPriority: "desc" as any }, { createdAt: "desc" }],
+      orderBy: { createdAt: "desc" },
     });
     return featuredArtworks.map((a) => ({
       ...a,
@@ -177,7 +177,7 @@ export async function getArtworksByCategory(
       where: {
         category: category,
       },
-      orderBy: [{ displayPriority: "desc" as any }, { createdAt: "desc" }],
+      orderBy: { createdAt: "desc" },
     });
     return artworksFromDb.map((a) => ({
       ...a,

@@ -33,12 +33,23 @@ const updateArtworkSchema = z.object({
 export async function GET() {
   try {
     const artworks = await prisma.artwork.findMany({
-      orderBy: [{ displayPriority: "desc" }, { createdAt: "desc" }],
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Tri applicatif: priorité desc puis date desc (fallback si la colonne n'existe pas en BDD)
+    const sorted = artworks.sort((a: any, b: any) => {
+      const pa = (a as any).displayPriority ?? 0;
+      const pb = (b as any).displayPriority ?? 0;
+      if (pb !== pa) return pb - pa;
+      return (
+        new Date(b.createdAt as any).getTime() -
+        new Date(a.createdAt as any).getTime()
+      );
     });
 
     return NextResponse.json({
       success: true,
-      artworks,
+      artworks: sorted,
     });
   } catch (error) {
     console.error("Erreur lors de la récupération des œuvres:", error);
@@ -67,17 +78,18 @@ export async function POST(request: NextRequest) {
     const validatedData = createArtworkSchema.parse(body);
 
     // Création de l'artwork en base de données
-    const artwork = await prisma.artwork.create({
-      data: {
-        title: validatedData.title,
-        description: validatedData.description,
-        imageUrl: validatedData.imageUrl,
-        category: validatedData.category,
-        subcategory: validatedData.subcategory || "",
-        featured: validatedData.featured || false,
-        displayPriority: validatedData.displayPriority ?? 0,
-      },
-    });
+    const data: any = {
+      title: validatedData.title,
+      description: validatedData.description,
+      imageUrl: validatedData.imageUrl,
+      category: validatedData.category,
+      subcategory: validatedData.subcategory || "",
+      featured: validatedData.featured || false,
+    };
+    if (validatedData.displayPriority !== undefined) {
+      data.displayPriority = validatedData.displayPriority;
+    }
+    const artwork = await prisma.artwork.create({ data });
 
     // Revalider les pages qui affichent les œuvres
     revalidatePath("/"); // Page d'accueil
