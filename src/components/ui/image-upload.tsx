@@ -140,7 +140,7 @@ export function ImageUpload({
                     )}
                   </Button>
                   <p className="mt-2 text-sm text-gray-500">
-                    PNG, JPG, WEBP jusqu&apos;à 10MB
+                    PNG, JPG, WEBP et HEIC (converti) jusqu&apos;à 10MB
                   </p>
                 </div>
               </div>

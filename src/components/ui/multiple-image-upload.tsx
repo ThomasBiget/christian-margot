@@ -160,7 +160,7 @@ export function MultipleImageUpload({
                     )}
                   </Button>
                   <p className="mt-2 text-sm text-gray-500">
-                    PNG, JPG, WEBP jusqu&apos;à 10MB chacune
+                    PNG, JPG, WEBP et HEIC (converti) jusqu&apos;à 10MB chacune
                   </p>
                   <p className="text-xs text-gray-400">
                     Vous pouvez sélectionner plusieurs fichiers

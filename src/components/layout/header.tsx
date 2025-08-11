@@ -7,11 +7,11 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "ACCUEIL.", href: "/" },
-  { name: "OEUVRES.", href: "/oeuvres" },
-  { name: "ACTUALITE.", href: "/evenements" },
-  { name: "L’ARTISTE.", href: "/artiste" },
-  { name: "CONTACT.", href: "/coordonnees" },
+  { name: "ACCUEIL", href: "/" },
+  { name: "OEUVRES", href: "/oeuvres" },
+  { name: "ACTUALITE", href: "/evenements" },
+  { name: "L’ARTISTE", href: "/artiste" },
+  { name: "CONTACT", href: "/coordonnees" },
 ];
 
 export default function Header() {
