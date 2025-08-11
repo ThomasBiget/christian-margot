@@ -30,7 +30,7 @@ export function PaintingCategoryTabs({ paintings }: PaintingCategoryTabsProps) {
 
   return (
     <Tabs defaultValue="all" onValueChange={setSubcategory}>
-      <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
+      <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
         <TabsTrigger value="all">Toutes</TabsTrigger>
         <TabsTrigger value="huile">Huile</TabsTrigger>
         <TabsTrigger value="aquarelle">Aquarelle</TabsTrigger>

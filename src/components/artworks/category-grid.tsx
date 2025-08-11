@@ -68,7 +68,7 @@ export function CategoryGrid({ artworks }: CategoryGridProps) {
               />
 
               <div
-                className={`absolute inset-0 bg-black/50 flex items-end p-4 transition-opacity duration-300 ${
+                className={`absolute inset-0 bg-black/50 flex items-end p-4 transition-opacity duration-300 z-10 ${
                   hoveredId === artwork.id ? "opacity-100" : "opacity-0"
                 }`}
               >

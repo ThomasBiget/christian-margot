@@ -47,6 +47,13 @@ export function EventsTable({ events }: EventsTableProps) {
         method: "DELETE",
       });
 
+      if (response.status === 401) {
+        toast.error("Session expirée. Veuillez vous reconnecter.");
+        const callbackUrl = encodeURIComponent("/admin/evenements");
+        router.push(`/admin/login?callbackUrl=${callbackUrl}`);
+        return;
+      }
+
       const data = await response.json();
 
       if (data.success) {

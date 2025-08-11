@@ -137,44 +137,94 @@ const artworks: Artwork[] = [
 
 // Function to get featured artworks for the homepage
 export async function getFeaturedArtworks(): Promise<Artwork[]> {
-  const featuredArtworks = await prisma.artwork.findMany({
-    where: {
-      featured: true,
-    },
-  });
-  return featuredArtworks.map(a => ({
-    ...a,
-    subcategory: a.subcategory ?? undefined,
-  }));
+  try {
+    const featuredArtworks = await prisma.artwork.findMany({
+      where: {
+        featured: true,
+      },
+      orderBy: [{ displayPriority: "desc" as any }, { createdAt: "desc" }],
+    });
+    return featuredArtworks.map((a) => ({
+      ...a,
+      subcategory: a.subcategory ?? undefined,
+    }));
+  } catch (error) {
+    console.warn(
+      "Prisma indisponible pour getFeaturedArtworks, utilisation des données mock.",
+      error
+    );
+    return artworks
+      .filter((a) => a.featured === true)
+      .sort((x, y) => {
+        const px = (x as any).displayPriority ?? 0;
+        const py = (y as any).displayPriority ?? 0;
+        if (py !== px) return py - px;
+        return (
+          new Date(y.createdAt as any).getTime() -
+          new Date(x.createdAt as any).getTime()
+        );
+      })
+      .map((a) => ({ ...a }));
+  }
 }
 
 // Function to get artworks by category
 export async function getArtworksByCategory(
   category: string
 ): Promise<Artwork[]> {
-  // This would be a database query in a real application
-  const artworks = await prisma.artwork.findMany({
-    where: {
-      category: category,
-    },
-  });
-  return artworks.map(a => ({
-    ...a,
-    subcategory: a.subcategory ?? undefined,
-  }));
+  try {
+    const artworksFromDb = await prisma.artwork.findMany({
+      where: {
+        category: category,
+      },
+      orderBy: [{ displayPriority: "desc" as any }, { createdAt: "desc" }],
+    });
+    return artworksFromDb.map((a) => ({
+      ...a,
+      subcategory: a.subcategory ?? undefined,
+    }));
+  } catch (error) {
+    console.warn(
+      "Prisma indisponible pour getArtworksByCategory, utilisation des données mock.",
+      error
+    );
+    return artworks
+      .filter((a) => a.category === category)
+      .sort((x, y) => {
+        const px = (x as any).displayPriority ?? 0;
+        const py = (y as any).displayPriority ?? 0;
+        if (py !== px) return py - px;
+        return (
+          new Date(y.createdAt as any).getTime() -
+          new Date(x.createdAt as any).getTime()
+        );
+      })
+      .map((a) => ({ ...a }));
+  }
 }
 
 // Function to get a single artwork by ID
 export async function getArtworkById(id: string): Promise<Artwork | null> {
-  const artwork = await prisma.artwork.findUnique({
-    where: {
-      id: id,
-    },
-  });
-  return artwork ? {
-    ...artwork,
-    subcategory: artwork.subcategory ?? undefined,
-  } : null;
+  try {
+    const artwork = await prisma.artwork.findUnique({
+      where: {
+        id: id,
+      },
+    });
+    return artwork
+      ? {
+          ...artwork,
+          subcategory: artwork.subcategory ?? undefined,
+        }
+      : null;
+  } catch (error) {
+    console.warn(
+      "Prisma indisponible pour getArtworkById, utilisation des données mock.",
+      error
+    );
+    const fallback = artworks.find((a) => a.id === id);
+    return fallback ? { ...fallback } : null;
+  }
 }
 
 // Function to get related artworks
@@ -182,15 +232,24 @@ export async function getRelatedArtworks(
   category: string,
   excludeId: string
 ): Promise<Artwork[]> {
-  // This would be a database query in a real application
-  const relatedArtworks = await prisma.artwork.findMany({
-    where: {
-      category: category,
-      id: { not: excludeId },
-    },
-  });
-  return relatedArtworks.map(a => ({
-    ...a,
-    subcategory: a.subcategory ?? undefined,
-  }));
+  try {
+    const relatedArtworks = await prisma.artwork.findMany({
+      where: {
+        category: category,
+        NOT: { id: excludeId },
+      },
+    });
+    return relatedArtworks.map((a) => ({
+      ...a,
+      subcategory: a.subcategory ?? undefined,
+    }));
+  } catch (error) {
+    console.warn(
+      "Prisma indisponible pour getRelatedArtworks, utilisation des données mock.",
+      error
+    );
+    return artworks
+      .filter((a) => a.category === category && a.id !== excludeId)
+      .map((a) => ({ ...a }));
+  }
 }

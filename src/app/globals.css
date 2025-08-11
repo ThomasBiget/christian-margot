@@ -31,7 +31,7 @@
     --ring: 24 5.4% 63.9%;
     --radius: 0.5rem;
   }
- 
+
   .dark {
     --background: 20 14.3% 4.1%;
     --foreground: 60 9.1% 97.8%;
@@ -63,11 +63,20 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-playfair;
   }
-  p, a, li, span {
-    @apply font-inter;
+  p,
+  a,
+  li,
+  span {
+    font-family: Papyrus, ui-serif, Georgia, Cambria, "Times New Roman", Times,
+      serif;
   }
 }
 

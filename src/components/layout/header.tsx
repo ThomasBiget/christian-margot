@@ -7,10 +7,11 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Accueil", href: "/" },
-  { name: "Mes Œuvres", href: "/oeuvres" },
-  { name: "Evènements", href: "/evenements" },
-  { name: "Coordonnées", href: "/coordonnees" },
+  { name: "ACCUEIL.", href: "/" },
+  { name: "OEUVRES.", href: "/oeuvres" },
+  { name: "ACTUALITE.", href: "/evenements" },
+  { name: "L’ARTISTE.", href: "/artiste" },
+  { name: "CONTACT.", href: "/coordonnees" },
 ];
 
 export default function Header() {
@@ -37,14 +38,20 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between py-5">
           <div className="flex-shrink-0">
-            <Link
-              href="/"
-              className={cn(
-                "text-2xl font-playfair tracking-wider transition-colors",
-                isScrolled || pathname !== "/" ? "text-primary" : "text-white"
-              )}
-            >
-              Christian Margot
+            <Link href="/" className="group block">
+              <div
+                className={cn(
+                  "leading-tight transition-colors",
+                  isScrolled || pathname !== "/" ? "text-primary" : "text-white"
+                )}
+              >
+                <div className="text-3xl md:text-4xl tracking-wider">
+                  Christian Margot
+                </div>
+                <div className="text-xs md:text-sm tracking-[0.2em] uppercase opacity-80 -mt-0.5">
+                  artiste plasticien
+                </div>
+              </div>
             </Link>
           </div>
 
@@ -55,8 +62,8 @@ export default function Header() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "text-sm tracking-wide transition-colors hover:text-accent-foreground",
-                  item.href === pathname ? "font-medium" : "font-normal",
+                  "text-sm tracking-widest uppercase font-semibold transition-all hover:underline hover:underline-offset-8 hover:decoration-current",
+                  item.href === pathname ? "font-bold" : "font-semibold",
                   isScrolled || pathname !== "/" ? "text-primary" : "text-white"
                 )}
               >
@@ -97,7 +104,7 @@ export default function Header() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "block px-3 py-2 rounded-md text-base font-medium",
+                  "block px-3 py-2 rounded-md text-base font-semibold tracking-widest uppercase hover:underline hover:underline-offset-6 hover:decoration-current",
                   item.href === pathname
                     ? "text-accent-foreground bg-accent"
                     : "text-foreground hover:bg-secondary"

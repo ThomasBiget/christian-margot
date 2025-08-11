@@ -29,9 +29,6 @@ export default async function Home() {
 
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-playfair mb-12 text-center">
-            Œuvres en Vedette
-          </h2>
           <FeaturedWorks artworks={featuredArtworks} />
         </div>
       </section>

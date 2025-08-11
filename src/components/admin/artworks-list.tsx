@@ -77,7 +77,15 @@ export default function ArtworksList() {
         artwork.subcategory.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  console.log(filteredArtworks);
+  const sortedArtworks = [...filteredArtworks].sort((a, b) => {
+    const pa = (a as any).displayPriority ?? 0;
+    const pb = (b as any).displayPriority ?? 0;
+    if (pb !== pa) return pb - pa;
+    return (
+      new Date(b.createdAt as any).getTime() -
+      new Date(a.createdAt as any).getTime()
+    );
+  });
 
   const handleToggleFeatured = async (artwork: Artwork) => {
     try {
@@ -91,6 +99,13 @@ export default function ArtworksList() {
           featured: !artwork.featured,
         }),
       });
+
+      if (response.status === 401) {
+        toast.error("Session expirée. Veuillez vous reconnecter.");
+        const callbackUrl = encodeURIComponent("/admin");
+        window.location.href = `/admin/login?callbackUrl=${callbackUrl}`;
+        return;
+      }
 
       const data = await response.json();
 
@@ -121,6 +136,13 @@ export default function ArtworksList() {
       const response = await fetch(`/api/artworks/${id}`, {
         method: "DELETE",
       });
+
+      if (response.status === 401) {
+        toast.error("Session expirée. Veuillez vous reconnecter.");
+        const callbackUrl = encodeURIComponent("/admin");
+        window.location.href = `/admin/login?callbackUrl=${callbackUrl}`;
+        return;
+      }
 
       const data = await response.json();
 
@@ -174,14 +196,14 @@ export default function ArtworksList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredArtworks.length === 0 ? (
+            {sortedArtworks.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
                   Aucune œuvre trouvée.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredArtworks.map((artwork) => (
+              sortedArtworks.map((artwork) => (
                 <TableRow key={artwork.id}>
                   <TableCell>
                     <div className="relative h-16 w-16 rounded overflow-hidden">

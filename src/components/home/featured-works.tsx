@@ -52,6 +52,16 @@ export default function FeaturedWorks({ artworks }: FeaturedWorksProps) {
     },
   };
 
+  const sorted = [...artworks].sort((a: any, b: any) => {
+    const pa = (a as any).displayPriority ?? 0;
+    const pb = (b as any).displayPriority ?? 0;
+    if (pb !== pa) return pb - pa;
+    return (
+      new Date(b.createdAt as any).getTime() -
+      new Date(a.createdAt as any).getTime()
+    );
+  });
+
   return (
     <motion.div
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
@@ -59,7 +69,7 @@ export default function FeaturedWorks({ artworks }: FeaturedWorksProps) {
       initial="hidden"
       animate="show"
     >
-      {artworks.map((artwork, index) => (
+      {sorted.map((artwork, index) => (
         <motion.div
           key={artwork.id}
           variants={item}

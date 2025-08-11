@@ -29,6 +29,10 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = new URLSearchParams(
+    typeof window !== "undefined" ? window.location.search : ""
+  );
+  const callbackUrlFromQuery = searchParams.get("callbackUrl") || "/admin";
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -58,7 +62,7 @@ export default function LoginPage() {
       }
 
       toast.success("Connexion réussie");
-      router.push("/admin");
+      router.push(callbackUrlFromQuery);
       router.refresh();
     } catch (error) {
       toast.error("Une erreur est survenue");

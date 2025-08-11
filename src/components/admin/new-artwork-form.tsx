@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { Label } from "@/components/ui/label";
 
 interface NewArtworkFormProps {
   onSuccess: () => void;
@@ -37,9 +38,15 @@ const formSchema = z.object({
     .string()
     .min(10, "La description doit contenir au moins 10 caractères"),
   imageUrl: z.string().url("Veuillez entrer une URL valide pour l'image"),
-  category: z.enum(["peinture", "collage", "stylo", "modelage"]),
+  category: z.enum(["peinture", "collage", "stylo", "modelage", "copie"]),
   subcategory: z.string().optional(),
   featured: z.boolean().default(false),
+  displayPriority: z
+    .number({ invalid_type_error: "Veuillez entrer un nombre entre 1 et 10" })
+    .int()
+    .min(1, "Minimum 1")
+    .max(10, "Maximum 10")
+    .optional(),
 });
 
 export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
@@ -54,6 +61,7 @@ export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
       category: "peinture",
       subcategory: "",
       featured: false,
+      displayPriority: undefined,
     },
   });
 
@@ -70,6 +78,13 @@ export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
         },
         body: JSON.stringify(values),
       });
+
+      if (response.status === 401) {
+        toast.error("Session expirée. Veuillez vous reconnecter.");
+        const callbackUrl = encodeURIComponent("/admin");
+        window.location.href = `/admin/login?callbackUrl=${callbackUrl}`;
+        return;
+      }
 
       const data = await response.json();
 
@@ -172,6 +187,7 @@ export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
                       <SelectItem value="collage">Collage</SelectItem>
                       <SelectItem value="stylo">Stylo</SelectItem>
                       <SelectItem value="modelage">Modelage</SelectItem>
+                      <SelectItem value="copie">Copie</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -207,6 +223,39 @@ export default function NewArtworkForm({ onSuccess }: NewArtworkFormProps) {
                 )}
               />
             )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="displayPriority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Priorité d&apos;affichage (optionnel)</FormLabel>
+                  <FormDescription>
+                    1 à 10. Plus la valeur est élevée, plus l&apos;œuvre est
+                    mise en avant.
+                  </FormDescription>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={10}
+                      placeholder="Ex: 8"
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? undefined
+                            : Number(e.target.value)
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           <FormField

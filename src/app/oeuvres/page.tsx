@@ -14,16 +14,13 @@ export default async function ArtworksPage() {
   const collages = await getArtworksByCategory("collage");
   const pens = await getArtworksByCategory("stylo");
   const sculptures = await getArtworksByCategory("modelage");
+  const copies = await getArtworksByCategory("copie");
 
   return (
     <div className="pt-24 pb-12 px-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-playfair mb-8 text-center">
-          Mes Œuvres
-        </h1>
-
         <Tabs defaultValue="peinture" className="w-full mt-12">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 h-auto">
+          <TabsList className="grid grid-cols-2 md:grid-cols-5 h-auto">
             <TabsTrigger value="peinture" className="py-3">
               Peinture
             </TabsTrigger>
@@ -35,6 +32,9 @@ export default async function ArtworksPage() {
             </TabsTrigger>
             <TabsTrigger value="modelage" className="py-3">
               Modelage
+            </TabsTrigger>
+            <TabsTrigger value="copie" className="py-3">
+              Copie
             </TabsTrigger>
           </TabsList>
 
@@ -52,6 +52,10 @@ export default async function ArtworksPage() {
 
           <TabsContent value="modelage" className="mt-8">
             <CategoryGrid artworks={sculptures} />
+          </TabsContent>
+
+          <TabsContent value="copie" className="mt-8">
+            <CategoryGrid artworks={copies} />
           </TabsContent>
         </Tabs>
       </div>

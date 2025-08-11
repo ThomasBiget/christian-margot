@@ -39,9 +39,15 @@ const formSchema = z.object({
     .string()
     .min(10, "La description doit contenir au moins 10 caractères"),
   imageUrl: z.string().url("Veuillez entrer une URL valide pour l&apos;image"),
-  category: z.enum(["peinture", "collage", "stylo", "modelage"]),
+  category: z.enum(["peinture", "collage", "stylo", "modelage", "copie"]),
   subcategory: z.string().optional(),
   featured: z.boolean().default(false),
+  displayPriority: z
+    .number({ invalid_type_error: "Veuillez entrer un nombre entre 1 et 10" })
+    .int()
+    .min(1, "Minimum 1")
+    .max(10, "Maximum 10")
+    .optional(),
 });
 
 export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
@@ -58,9 +64,11 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
         | "peinture"
         | "collage"
         | "stylo"
-        | "modelage",
+        | "modelage"
+        | "copie",
       subcategory: artwork.subcategory || "",
       featured: artwork.featured || false,
+      displayPriority: (artwork as any).displayPriority ?? undefined,
     },
   });
 
@@ -83,8 +91,16 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
           category: values.category,
           subcategory: values.subcategory || "",
           featured: values.featured,
+          displayPriority: values.displayPriority,
         }),
       });
+
+      if (response.status === 401) {
+        toast.error("Session expirée. Veuillez vous reconnecter.");
+        const callbackUrl = encodeURIComponent(`/admin/edit/${artwork.id}`);
+        router.push(`/admin/login?callbackUrl=${callbackUrl}`);
+        return;
+      }
 
       const data = await response.json();
 
@@ -178,6 +194,7 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
                       <SelectItem value="collage">Collage</SelectItem>
                       <SelectItem value="stylo">Stylo</SelectItem>
                       <SelectItem value="modelage">Modelage</SelectItem>
+                      <SelectItem value="copie">Copie</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -224,6 +241,39 @@ export default function EditArtworkForm({ artwork }: EditArtworkFormProps) {
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="displayPriority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Priorité d&apos;affichage (optionnel)
+                        </FormLabel>
+                        <FormDescription>
+                          1 à 10. Plus la valeur est élevée, plus l&apos;œuvre
+                          est mise en avant.
+                        </FormDescription>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={10}
+                            placeholder="Ex: 8"
+                            value={field.value ?? ""}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value === ""
+                                  ? undefined
+                                  : Number(e.target.value)
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">

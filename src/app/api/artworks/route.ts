@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
@@ -9,9 +11,10 @@ const createArtworkSchema = z.object({
     .string()
     .min(10, "La description doit contenir au moins 10 caractères"),
   imageUrl: z.string().url("Veuillez entrer une URL valide pour l'image"),
-  category: z.enum(["peinture", "collage", "stylo", "modelage"]),
+  category: z.enum(["peinture", "collage", "stylo", "modelage", "copie"]),
   subcategory: z.string().optional(),
   featured: z.boolean().default(false),
+  displayPriority: z.number().min(0).max(10).optional(),
 });
 
 const updateArtworkSchema = z.object({
@@ -20,16 +23,17 @@ const updateArtworkSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   imageUrl: z.string().url().optional(),
-  category: z.enum(["peinture", "collage", "stylo", "modelage"]).optional(),
+  category: z
+    .enum(["peinture", "collage", "stylo", "modelage", "copie"])
+    .optional(),
   subcategory: z.string().optional(),
+  displayPriority: z.number().min(0).max(10).optional(),
 });
 
 export async function GET() {
   try {
     const artworks = await prisma.artwork.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [{ displayPriority: "desc" }, { createdAt: "desc" }],
     });
 
     return NextResponse.json({
@@ -50,6 +54,13 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "Non autorisé" },
+        { status: 401 }
+      );
+    }
     const body = await request.json();
 
     // Validation des données
@@ -64,6 +75,7 @@ export async function POST(request: NextRequest) {
         category: validatedData.category,
         subcategory: validatedData.subcategory || "",
         featured: validatedData.featured || false,
+        displayPriority: validatedData.displayPriority ?? 0,
       },
     });
 
@@ -106,6 +118,13 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "Non autorisé" },
+        { status: 401 }
+      );
+    }
     const body = await request.json();
     const validatedData = updateArtworkSchema.parse(body);
 
@@ -123,6 +142,9 @@ export async function PUT(request: NextRequest) {
         ...(validatedData.category && { category: validatedData.category }),
         ...(validatedData.subcategory !== undefined && {
           subcategory: validatedData.subcategory,
+        }),
+        ...(validatedData.displayPriority !== undefined && {
+          displayPriority: validatedData.displayPriority,
         }),
       },
     });
@@ -163,6 +185,13 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "Non autorisé" },
+        { status: 401 }
+      );
+    }
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
