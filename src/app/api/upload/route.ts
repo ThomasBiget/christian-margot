@@ -1,18 +1,15 @@
 import { put } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
 import sharp from "sharp";
+
+// Force Node.js runtime (nécessaire pour Vercel Blob et Sharp)
+export const runtime = "nodejs";
+export const maxDuration = 60; // 60 secondes max
 
 export async function POST(request: NextRequest) {
   try {
-    // En développement, si le token n'est pas configuré, utiliser le stockage local
-    const useLocalStorage =
-      process.env.NODE_ENV !== "production" &&
-      !process.env.BLOB_READ_WRITE_TOKEN;
-
-    if (!process.env.BLOB_READ_WRITE_TOKEN && process.env.NODE_ENV === "production") {
+    // Vérifier que la variable d'environnement est configurée
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
       console.error(
         "BLOB_READ_WRITE_TOKEN n'est pas configuré dans les variables d'environnement"
       );
@@ -22,12 +19,6 @@ export async function POST(request: NextRequest) {
             "Configuration du stockage d'images manquante. Veuillez contacter l'administrateur.",
         },
         { status: 500 }
-      );
-    }
-
-    if (useLocalStorage) {
-      console.log(
-        "⚠️ BLOB_READ_WRITE_TOKEN non configuré, utilisation du stockage local pour le développement"
       );
     }
 
@@ -90,36 +81,19 @@ export async function POST(request: NextRequest) {
     const randomString = Math.random().toString(36).substring(2, 15);
     const filename = `artwork-${timestamp}-${randomString}.${targetExtension}`;
 
-    let url: string;
+    // Upload vers Vercel Blob
+    const blob = await put(filename, uploadBuffer, {
+      access: "public",
+      addRandomSuffix: false,
+      contentType:
+        targetExtension === "jpg" || targetExtension === "jpeg"
+          ? "image/jpeg"
+          : `image/${targetExtension}`,
+    });
 
-    if (useLocalStorage) {
-      // Stockage local pour le développement
-      const uploadsDir = join(process.cwd(), "public", "uploads");
-      if (!existsSync(uploadsDir)) {
-        await mkdir(uploadsDir, { recursive: true });
-      }
+    console.log(`✅ Image uploadée sur Vercel Blob : ${blob.url}`);
 
-      const filepath = join(uploadsDir, filename);
-      await writeFile(filepath, uploadBuffer);
-      url = `/uploads/${filename}`;
-      
-      console.log(`✅ Image uploadée localement : ${url}`);
-    } else {
-      // Upload vers Vercel Blob (production)
-      const blob = await put(filename, uploadBuffer, {
-        access: "public",
-        addRandomSuffix: false,
-        contentType:
-          targetExtension === "jpg" || targetExtension === "jpeg"
-            ? "image/jpeg"
-            : `image/${targetExtension}`,
-      });
-      url = blob.url;
-      
-      console.log(`✅ Image uploadée sur Vercel Blob : ${url}`);
-    }
-
-    return NextResponse.json({ url });
+    return NextResponse.json({ url: blob.url });
   } catch (error) {
     console.error("Erreur upload:", error);
     return NextResponse.json(
