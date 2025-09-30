@@ -1,10 +1,17 @@
 import { put } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
-import sharp from "sharp";
 
-// Force Node.js runtime (nécessaire pour Vercel Blob et Sharp)
+// Force Node.js runtime (nécessaire pour Vercel Blob)
 export const runtime = "nodejs";
 export const maxDuration = 10; // 10 secondes (limite Hobby plan Vercel)
+
+// Import dynamique de Sharp pour éviter les erreurs au build
+let sharp: any;
+try {
+  sharp = require("sharp");
+} catch (error) {
+  console.warn("Sharp n'est pas disponible, les images ne seront pas optimisées");
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,35 +66,67 @@ export async function POST(request: NextRequest) {
     let uploadBuffer: Buffer;
     let targetExtension = "jpg";
 
-    if (isHeic) {
-      // Convertit en JPEG de bonne qualité pour compatibilité navigateur
-      // Optimisation : limiter la taille pour accélérer le traitement
-      uploadBuffer = await sharp(Buffer.from(arrayBuffer))
-        .resize(2048, 2048, { fit: 'inside', withoutEnlargement: true })
-        .jpeg({ quality: 85, mozjpeg: true })
-        .toBuffer();
-      targetExtension = "jpg";
-    } else {
-      // Optimiser toutes les images pour réduire le temps de traitement
-      const sharpInstance = sharp(Buffer.from(arrayBuffer));
-      const metadata = await sharpInstance.metadata();
-      
-      // Si l'image est trop grande, la redimensionner
-      if (metadata.width && metadata.width > 2048) {
-        uploadBuffer = await sharpInstance
-          .resize(2048, 2048, { fit: 'inside', withoutEnlargement: true })
-          .toBuffer();
-      } else {
+    // Si Sharp est disponible, optimiser l'image
+    if (sharp) {
+      try {
+        if (isHeic) {
+          // Convertit en JPEG de bonne qualité pour compatibilité navigateur
+          uploadBuffer = await sharp(Buffer.from(arrayBuffer))
+            .resize(2048, 2048, { fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 85, mozjpeg: true })
+            .toBuffer();
+          targetExtension = "jpg";
+        } else {
+          // Optimiser toutes les images pour réduire le temps de traitement
+          const sharpInstance = sharp(Buffer.from(arrayBuffer));
+          const metadata = await sharpInstance.metadata();
+          
+          // Si l'image est trop grande, la redimensionner
+          if (metadata.width && metadata.width > 2048) {
+            uploadBuffer = await sharpInstance
+              .resize(2048, 2048, { fit: 'inside', withoutEnlargement: true })
+              .toBuffer();
+          } else {
+            uploadBuffer = Buffer.from(arrayBuffer);
+          }
+          
+          // Conserver extension connue si image
+          const extFromName = (file.name.split(".").pop() || "jpg").toLowerCase();
+          targetExtension = ["jpg", "jpeg", "png", "webp", "gif", "avif"].includes(
+            extFromName
+          )
+            ? extFromName
+            : "jpg";
+        }
+      } catch (sharpError) {
+        console.warn("Erreur Sharp, upload sans optimisation:", sharpError);
+        // Fallback: upload sans optimisation
         uploadBuffer = Buffer.from(arrayBuffer);
+        const extFromName = (file.name.split(".").pop() || "jpg").toLowerCase();
+        targetExtension = ["jpg", "jpeg", "png", "webp", "gif", "avif"].includes(
+          extFromName
+        )
+          ? extFromName
+          : "jpg";
       }
-      
-      // Conserver extension connue si image
+    } else {
+      // Pas de Sharp disponible: upload direct sans optimisation
+      console.log("Upload sans optimisation Sharp");
+      uploadBuffer = Buffer.from(arrayBuffer);
       const extFromName = (file.name.split(".").pop() || "jpg").toLowerCase();
       targetExtension = ["jpg", "jpeg", "png", "webp", "gif", "avif"].includes(
         extFromName
       )
         ? extFromName
         : "jpg";
+        
+      // Refuser les HEIC si Sharp n'est pas disponible
+      if (isHeic) {
+        return NextResponse.json(
+          { error: "Les fichiers HEIC ne sont pas supportés actuellement. Veuillez utiliser JPG, PNG ou WEBP." },
+          { status: 400 }
+        );
+      }
     }
 
     // Générer un nom de fichier unique
