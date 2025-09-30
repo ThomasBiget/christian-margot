@@ -6,15 +6,6 @@ import sharp from "sharp";
 export const runtime = "nodejs";
 export const maxDuration = 10; // 10 secondes (limite Hobby plan Vercel)
 
-// Augmenter la limite de taille du body
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-};
-
 export async function POST(request: NextRequest) {
   try {
     // Vérifier que la variable d'environnement est configurée
