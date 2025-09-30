@@ -4,7 +4,16 @@ import sharp from "sharp";
 
 // Force Node.js runtime (nécessaire pour Vercel Blob et Sharp)
 export const runtime = "nodejs";
-export const maxDuration = 60; // 60 secondes max
+export const maxDuration = 10; // 10 secondes (limite Hobby plan Vercel)
+
+// Augmenter la limite de taille du body
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,12 +70,26 @@ export async function POST(request: NextRequest) {
 
     if (isHeic) {
       // Convertit en JPEG de bonne qualité pour compatibilité navigateur
+      // Optimisation : limiter la taille pour accélérer le traitement
       uploadBuffer = await sharp(Buffer.from(arrayBuffer))
-        .jpeg({ quality: 90 })
+        .resize(2048, 2048, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 85, mozjpeg: true })
         .toBuffer();
       targetExtension = "jpg";
     } else {
-      uploadBuffer = Buffer.from(arrayBuffer);
+      // Optimiser toutes les images pour réduire le temps de traitement
+      const sharpInstance = sharp(Buffer.from(arrayBuffer));
+      const metadata = await sharpInstance.metadata();
+      
+      // Si l'image est trop grande, la redimensionner
+      if (metadata.width && metadata.width > 2048) {
+        uploadBuffer = await sharpInstance
+          .resize(2048, 2048, { fit: 'inside', withoutEnlargement: true })
+          .toBuffer();
+      } else {
+        uploadBuffer = Buffer.from(arrayBuffer);
+      }
+      
       // Conserver extension connue si image
       const extFromName = (file.name.split(".").pop() || "jpg").toLowerCase();
       targetExtension = ["jpg", "jpeg", "png", "webp", "gif", "avif"].includes(
