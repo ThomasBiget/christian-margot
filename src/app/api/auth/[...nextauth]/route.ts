@@ -4,6 +4,9 @@ import { compare } from "bcrypt";
 import { prisma } from "../../../../lib/prisma";
 import NextAuth from "next-auth/next";
 
+// Force Node.js runtime (nécessaire pour Prisma et NextAuth)
+export const runtime = "nodejs";
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({

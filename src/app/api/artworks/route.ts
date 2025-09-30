@@ -5,6 +5,9 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
+// Force Node.js runtime (nécessaire pour Prisma)
+export const runtime = "nodejs";
+
 const createArtworkSchema = z.object({
   title: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
   description: z

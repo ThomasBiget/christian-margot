@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+// Force Node.js runtime (nécessaire pour Prisma)
+export const runtime = "nodejs";
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }

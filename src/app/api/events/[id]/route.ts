@@ -4,6 +4,9 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { updateEvent, deleteEvent, addEventImages } from "@/lib/event";
 import { revalidatePath } from "next/cache";
 
+// Force Node.js runtime (nécessaire pour Prisma)
+export const runtime = "nodejs";
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
