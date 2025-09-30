@@ -1,36 +1,26 @@
-import { put } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import sharp from "sharp";
 
+/**
+ * Alternative d'upload LOCAL pour le développement
+ * Les images sont stockées dans /public/uploads
+ * 
+ * ⚠️ ATTENTION : N'utilisez PAS cette route en production !
+ * En production, utilisez /api/upload avec Vercel Blob
+ */
 export async function POST(request: NextRequest) {
+  // Vérifier qu'on est bien en développement
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Cette route n'est disponible qu'en développement. Utilisez /api/upload" },
+      { status: 403 }
+    );
+  }
+
   try {
-    // En développement, si le token n'est pas configuré, utiliser le stockage local
-    const useLocalStorage =
-      process.env.NODE_ENV !== "production" &&
-      !process.env.BLOB_READ_WRITE_TOKEN;
-
-    if (!process.env.BLOB_READ_WRITE_TOKEN && process.env.NODE_ENV === "production") {
-      console.error(
-        "BLOB_READ_WRITE_TOKEN n'est pas configuré dans les variables d'environnement"
-      );
-      return NextResponse.json(
-        {
-          error:
-            "Configuration du stockage d'images manquante. Veuillez contacter l'administrateur.",
-        },
-        { status: 500 }
-      );
-    }
-
-    if (useLocalStorage) {
-      console.log(
-        "⚠️ BLOB_READ_WRITE_TOKEN non configuré, utilisation du stockage local pour le développement"
-      );
-    }
-
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -41,8 +31,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier le type de fichier
-    if (!file.type.startsWith("image/")) {
+    // Vérifier le type de fichier (inclure HEIC/HEIF)
+    const isImage = file.type.startsWith("image/") || 
+                    file.type === "image/heic" || 
+                    file.type === "image/heif" ||
+                    /\.heic$/i.test(file.name) ||
+                    /\.heif$/i.test(file.name);
+    
+    if (!isImage) {
       return NextResponse.json(
         { error: "Le fichier doit être une image" },
         { status: 400 }
@@ -55,6 +51,12 @@ export async function POST(request: NextRequest) {
         { error: "L'image ne doit pas dépasser 10MB" },
         { status: 400 }
       );
+    }
+
+    // Créer le dossier uploads s'il n'existe pas
+    const uploadsDir = join(process.cwd(), "public", "uploads");
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true });
     }
 
     // Gérer HEIC/HEIF -> convertir en JPEG
@@ -90,38 +92,16 @@ export async function POST(request: NextRequest) {
     const randomString = Math.random().toString(36).substring(2, 15);
     const filename = `artwork-${timestamp}-${randomString}.${targetExtension}`;
 
-    let url: string;
+    // Enregistrer le fichier
+    const filepath = join(uploadsDir, filename);
+    await writeFile(filepath, uploadBuffer);
 
-    if (useLocalStorage) {
-      // Stockage local pour le développement
-      const uploadsDir = join(process.cwd(), "public", "uploads");
-      if (!existsSync(uploadsDir)) {
-        await mkdir(uploadsDir, { recursive: true });
-      }
-
-      const filepath = join(uploadsDir, filename);
-      await writeFile(filepath, uploadBuffer);
-      url = `/uploads/${filename}`;
-      
-      console.log(`✅ Image uploadée localement : ${url}`);
-    } else {
-      // Upload vers Vercel Blob (production)
-      const blob = await put(filename, uploadBuffer, {
-        access: "public",
-        addRandomSuffix: false,
-        contentType:
-          targetExtension === "jpg" || targetExtension === "jpeg"
-            ? "image/jpeg"
-            : `image/${targetExtension}`,
-      });
-      url = blob.url;
-      
-      console.log(`✅ Image uploadée sur Vercel Blob : ${url}`);
-    }
-
+    // Retourner l'URL relative (accessible via /uploads/filename)
+    const url = `/uploads/${filename}`;
+    
     return NextResponse.json({ url });
   } catch (error) {
-    console.error("Erreur upload:", error);
+    console.error("Erreur upload local:", error);
     return NextResponse.json(
       {
         error:

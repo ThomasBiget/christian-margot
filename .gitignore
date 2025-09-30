@@ -34,3 +34,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Images uploadées en développement
+public/uploads/*
+!public/uploads/README.md
