@@ -42,8 +42,14 @@ export function MultipleImageUpload({
 
     try {
       const uploadPromises = filesToUpload.map(async (file) => {
-        // Vérifier le type de fichier
-        if (!file.type.startsWith("image/")) {
+        // Vérifier le type de fichier (inclure HEIC/HEIF)
+        const isImage = file.type.startsWith("image/") || 
+                        file.type === "image/heic" || 
+                        file.type === "image/heif" ||
+                        /\.heic$/i.test(file.name) ||
+                        /\.heif$/i.test(file.name);
+        
+        if (!isImage) {
           throw new Error(`${file.name} n'est pas une image valide`);
         }
 

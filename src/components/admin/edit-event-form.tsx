@@ -10,10 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Image from "next/image";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { MultipleImageUpload } from "@/components/ui/multiple-image-upload";
 
 interface EditEventFormProps {
   event: EventWithImages;
@@ -52,21 +54,6 @@ export function EditEventForm({ event }: EditEventFormProps) {
       ...prev,
       featured: checked,
     }));
-  };
-
-  const addNewImage = () => {
-    const totalImages = existingImages.length + newImages.length;
-    if (totalImages < 10) {
-      setNewImages((prev) => [...prev, ""]);
-    }
-  };
-
-  const updateNewImage = (index: number, url: string) => {
-    setNewImages((prev) => prev.map((img, i) => (i === index ? url : img)));
-  };
-
-  const removeNewImage = (index: number) => {
-    setNewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const validateDates = () => {
@@ -151,6 +138,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
       if (data.success) {
         toast.success("Événement mis à jour avec succès");
         router.push("/admin/evenements");
+        router.refresh();
       } else {
         throw new Error(data.error || "Erreur lors de la mise à jour");
       }
@@ -162,7 +150,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
     }
   };
 
-  const totalImages = existingImages.length + newImages.length;
+  const maxNewImages = Math.max(0, 10 - existingImages.length);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -278,108 +266,75 @@ export function EditEventForm({ event }: EditEventFormProps) {
         <CardHeader>
           <CardTitle>Image principale *</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="mainImage">URL de l&apos;image principale *</Label>
-            <Input
-              id="mainImage"
-              value={mainImage}
-              onChange={(e) => setMainImage(e.target.value)}
-              placeholder="https://exemple.com/image.jpg"
-              required
-            />
-          </div>
-          {mainImage && (
-            <div className="relative w-full h-48 rounded-lg overflow-hidden">
-              <Image
-                src={mainImage}
-                alt="Aperçu de l'image principale"
-                fill
-                className="object-cover"
-              />
-            </div>
-          )}
+        <CardContent>
+          <ImageUpload
+            value={mainImage}
+            onChange={setMainImage}
+            label="Image principale de l'événement"
+            required
+          />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Images supplémentaires</CardTitle>
+          <CardTitle>
+            Images supplémentaires ({existingImages.length + newImages.length}
+            /10)
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Images existantes */}
-          {existingImages.length > 0 && (
-            <div>
-              <h4 className="font-medium mb-3">Images actuelles</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {existingImages.map((image) => (
-                  <div key={image.id} className="relative group">
-                    <div className="relative aspect-square rounded-lg overflow-hidden">
-                      <Image
-                        src={image.imageUrl}
-                        alt="Image de l'événement"
-                        fill
-                        className="object-cover"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => removeExistingImage(image.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Images existantes */}
+            {existingImages.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-4">Images actuelles</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {existingImages.map((image) => (
+                    <div key={image.id} className="relative group">
+                      <div className="relative aspect-square rounded-lg overflow-hidden border">
+                        <Image
+                          src={image.imageUrl}
+                          alt="Image événement"
+                          fill
+                          className="object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeExistingImage(image.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Nouvelles images */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium">Ajouter de nouvelles images</h4>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addNewImage}
-                disabled={totalImages >= 10}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter une image
-              </Button>
-            </div>
-
-            {newImages.length > 0 && (
-              <div className="space-y-3">
-                {newImages.map((image, index) => (
-                  <div key={index} className="flex gap-3">
-                    <div className="flex-1">
-                      <Input
-                        value={image}
-                        onChange={(e) => updateNewImage(index, e.target.value)}
-                        placeholder="https://exemple.com/image.jpg"
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeNewImage(index)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
 
-            <p className="text-sm text-muted-foreground">
-              {totalImages}/10 images au total
-            </p>
+            {/* Composant pour ajouter de nouvelles images */}
+            {maxNewImages > 0 && (
+              <div>
+                <h4 className="font-medium mb-4">
+                  Ajouter de nouvelles images
+                </h4>
+                <MultipleImageUpload
+                  values={newImages}
+                  onChange={setNewImages}
+                  label=""
+                  maxImages={maxNewImages}
+                />
+              </div>
+            )}
+
+            {existingImages.length === 0 && newImages.length === 0 && (
+              <p className="text-muted-foreground text-sm">
+                Aucune image supplémentaire.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

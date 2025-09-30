@@ -32,8 +32,14 @@ export function ImageUpload({
   const handleFileUpload = async (file: File) => {
     if (!file) return;
 
-    // Vérifier le type de fichier
-    if (!file.type.startsWith("image/")) {
+    // Vérifier le type de fichier (inclure HEIC/HEIF)
+    const isImage = file.type.startsWith("image/") || 
+                    file.type === "image/heic" || 
+                    file.type === "image/heif" ||
+                    /\.heic$/i.test(file.name) ||
+                    /\.heif$/i.test(file.name);
+    
+    if (!isImage) {
       alert("Veuillez sélectionner un fichier image");
       return;
     }

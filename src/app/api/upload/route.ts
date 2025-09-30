@@ -4,6 +4,20 @@ import sharp from "sharp";
 
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier que la variable d'environnement est configurée
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error(
+        "BLOB_READ_WRITE_TOKEN n'est pas configuré dans les variables d'environnement"
+      );
+      return NextResponse.json(
+        {
+          error:
+            "Configuration du stockage d'images manquante. Veuillez contacter l'administrateur.",
+        },
+        { status: 500 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -77,7 +91,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Erreur upload:", error);
     return NextResponse.json(
-      { error: "Erreur lors de l'upload" },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Erreur lors de l'upload de l'image",
+      },
       { status: 500 }
     );
   }
