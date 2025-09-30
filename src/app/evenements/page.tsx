@@ -3,6 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getUpcomingEvents, getPastEvents } from "@/lib/event";
 import { EventsGrid } from "@/components/events/events-grid";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Événements | Portfolio Artistique",
   description:

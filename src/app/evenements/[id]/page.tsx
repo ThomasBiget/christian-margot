@@ -9,6 +9,8 @@ import { formatEventDateTime } from "@/lib/utils";
 import { EventGallery } from "@/components/events/event-gallery";
 import { RelatedEvents } from "@/components/events/related-events";
 
+export const dynamic = 'force-dynamic';
+
 interface EventPageParams {
   params: {
     id: string;

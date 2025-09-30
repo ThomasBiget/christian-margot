@@ -7,96 +7,136 @@ export type EventWithImages = Event & {
 };
 
 export async function getAllEvents(): Promise<EventWithImages[]> {
-  return await prisma.event.findMany({
-    include: {
-      images: {
-        orderBy: {
-          order: "asc",
+  try {
+    return await prisma.event.findMany({
+      include: {
+        images: {
+          orderBy: {
+            order: "asc",
+          },
         },
       },
-    },
-    orderBy: {
-      startDate: "desc",
-    },
-  });
+      orderBy: {
+        startDate: "desc",
+      },
+    });
+  } catch (error) {
+    console.warn(
+      "Base de données indisponible pour getAllEvents, retour tableau vide.",
+      error
+    );
+    return [];
+  }
 }
 
 export async function getUpcomingEvents(): Promise<EventWithImages[]> {
-  const now = new Date();
-  return await prisma.event.findMany({
-    where: {
-      endDate: {
-        gte: now,
-      },
-    },
-    include: {
-      images: {
-        orderBy: {
-          order: "asc",
+  try {
+    const now = new Date();
+    return await prisma.event.findMany({
+      where: {
+        endDate: {
+          gte: now,
         },
       },
-    },
-    orderBy: {
-      startDate: "asc",
-    },
-  });
+      include: {
+        images: {
+          orderBy: {
+            order: "asc",
+          },
+        },
+      },
+      orderBy: {
+        startDate: "asc",
+      },
+    });
+  } catch (error) {
+    console.warn(
+      "Base de données indisponible pour getUpcomingEvents, retour tableau vide.",
+      error
+    );
+    return [];
+  }
 }
 
 export async function getPastEvents(): Promise<EventWithImages[]> {
-  const now = new Date();
-  return await prisma.event.findMany({
-    where: {
-      endDate: {
-        lt: now,
-      },
-    },
-    include: {
-      images: {
-        orderBy: {
-          order: "asc",
+  try {
+    const now = new Date();
+    return await prisma.event.findMany({
+      where: {
+        endDate: {
+          lt: now,
         },
       },
-    },
-    orderBy: {
-      startDate: "desc",
-    },
-  });
+      include: {
+        images: {
+          orderBy: {
+            order: "asc",
+          },
+        },
+      },
+      orderBy: {
+        startDate: "desc",
+      },
+    });
+  } catch (error) {
+    console.warn(
+      "Base de données indisponible pour getPastEvents, retour tableau vide.",
+      error
+    );
+    return [];
+  }
 }
 
 export async function getEventById(
   id: string
 ): Promise<EventWithImages | null> {
-  return await prisma.event.findUnique({
-    where: { id },
-    include: {
-      images: {
-        orderBy: {
-          order: "asc",
+  try {
+    return await prisma.event.findUnique({
+      where: { id },
+      include: {
+        images: {
+          orderBy: {
+            order: "asc",
+          },
         },
       },
-    },
-  });
+    });
+  } catch (error) {
+    console.warn(
+      "Base de données indisponible pour getEventById, retour null.",
+      error
+    );
+    return null;
+  }
 }
 
 export async function getFeaturedEvents(
   limit: number = 6
 ): Promise<EventWithImages[]> {
-  return await prisma.event.findMany({
-    where: {
-      featured: true,
-    },
-    include: {
-      images: {
-        orderBy: {
-          order: "asc",
+  try {
+    return await prisma.event.findMany({
+      where: {
+        featured: true,
+      },
+      include: {
+        images: {
+          orderBy: {
+            order: "asc",
+          },
         },
       },
-    },
-    orderBy: {
-      startDate: "desc",
-    },
-    take: limit,
-  });
+      orderBy: {
+        startDate: "desc",
+      },
+      take: limit,
+    });
+  } catch (error) {
+    console.warn(
+      "Base de données indisponible pour getFeaturedEvents, retour tableau vide.",
+      error
+    );
+    return [];
+  }
 }
 
 export async function createEvent(data: {
