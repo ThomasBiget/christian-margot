@@ -1,7 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const pathname = usePathname();
+
+  // Ne pas afficher le footer public sur les pages admin
+  const isAdminPage = pathname.startsWith("/admin");
+  if (isAdminPage) {
+    return null;
+  }
 
   return (
     <footer className="bg-secondary py-8 mt-20">

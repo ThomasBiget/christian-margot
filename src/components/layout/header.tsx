@@ -10,7 +10,7 @@ const navigation = [
   { name: "ACCUEIL", href: "/" },
   { name: "OEUVRES", href: "/oeuvres" },
   { name: "ACTUALITE", href: "/evenements" },
-  { name: "L’ARTISTE", href: "/artiste" },
+  { name: "L'ARTISTE", href: "/artiste" },
   { name: "CONTACT", href: "/coordonnees" },
 ];
 
@@ -18,6 +18,12 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+
+  // Ne pas afficher le header public sur les pages admin
+  const isAdminPage = pathname.startsWith("/admin");
+  if (isAdminPage) {
+    return null;
+  }
 
   useEffect(() => {
     const handleScroll = () => {

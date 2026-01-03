@@ -1,38 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { signOut } from "next-auth/react";
-import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import ArtworksList from "@/components/admin/artworks-list";
 import NewArtworkForm from "@/components/admin/new-artwork-form";
-import { toast } from "sonner";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("artworks");
-
-  const handleSignOut = async () => {
-    await signOut({ redirect: true, callbackUrl: "/" });
-    toast.success("Déconnexion réussie");
-  };
 
   return (
     <div className="pt-24 pb-12 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center mb-8">
-          <h1 className="text-3xl font-playfair">Administration</h1>
-          <div className="flex flex-col gap-4 md:flex-row">
-            <Link href="/admin/evenements">
-              <Button variant="outline">Gérer les évènements</Button>
-            </Link>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
-            </Button>
-          </div>
+          <h1 className="text-3xl font-playfair text-slate-900">Gestion des œuvres</h1>
         </div>
 
         <Separator className="my-6" />
