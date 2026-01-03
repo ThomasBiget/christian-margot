@@ -80,7 +80,7 @@ export default function Footer() {
 
         <div className="mt-8 pt-6 border-t border-border">
           <p className="text-sm text-center text-muted-foreground">
-            © {currentYear} L&apos;Artiste. Tous droits réservés.
+            © {currentYear} Christian Margot. Tous droits réservés.
           </p>
         </div>
       </div>

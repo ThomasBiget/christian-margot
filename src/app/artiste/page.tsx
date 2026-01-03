@@ -8,7 +8,7 @@ export default function ArtistPage() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-playfair mb-6">L’artiste</h1>
         <p className="text-lg leading-relaxed">
-          À compléter: biographie de l’artiste, démarche, expositions, etc.
+          En cours de construction...
         </p>
       </div>
     </div>
